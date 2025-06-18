@@ -75,13 +75,13 @@
                                 @if(auth()->user()->role === 'admin')
                                     <td class="text-nowrap">
                                         <div class="d-flex gap-2">
-                                            <a href="{{ route('mesin.edit', $m->id) }}" class="btn btn-warning btn-sm">
+                                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditMesin{{ $m->id }}">
                                                 <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            <form action="{{ route('mesin.destroy', $m->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus?')">
+                                            </button>
+                                            <form action="{{ route('mesin.destroy', $m->id) }}" method="POST" class="formHapusMesin d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                <button type="submit" class="btn btn-danger btn-sm btnHapusMesin">
                                                     <i class="fas fa-trash-alt"></i> Hapus
                                                 </button>
                                             </form>
@@ -89,6 +89,77 @@
                                     </td>
                                 @endif
                             </tr>
+
+                            {{-- Modal Edit Mesin --}}
+                            <div class="modal fade" id="modalEditMesin{{ $m->id }}" tabindex="-1" aria-labelledby="editMesinLabel{{ $m->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <form action="{{ route('mesin.update', $m->id) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-content shadow">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editMesinLabel{{ $m->id }}">Edit Mesin</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" name="nama_mesin" value="{{ $m->nama_mesin }}" required>
+                                                            <label>Nama Mesin</label>
+                                                        </div>
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" name="kode_mesin" value="{{ $m->kode_mesin }}" required>
+                                                            <label>Kode Mesin</label>
+                                                        </div>
+                                                        <div class="form-floating mb-3">
+                                                            <input type="number" class="form-control" name="harga_beli" value="{{ $m->harga_beli }}" required>
+                                                            <label>Harga Beli</label>
+                                                        </div>
+                                                        <div class="form-floating mb-3">
+                                                            <input type="number" class="form-control" name="tahun_pembelian" value="{{ $m->tahun_pembelian }}" required>
+                                                            <label>Tahun Pembelian</label>
+                                                        </div>
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" name="spesifikasi_mesin" value="{{ $m->spesifikasi_mesin }}" required>
+                                                            <label>Spesifikasi Mesin</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating mb-3">
+                                                            <input type="number" step="0.01" class="form-control" name="daya_motor" value="{{ $m->daya_motor }}" required>
+                                                            <label>Daya Motor</label>
+                                                        </div>
+                                                        <div class="form-floating mb-3">
+                                                            <input type="text" class="form-control" name="lokasi_mesin" value="{{ $m->lokasi_mesin }}" required>
+                                                            <label>Lokasi Mesin</label>
+                                                        </div>
+                                                        <div class="form-floating mb-3">
+                                                            <input type="number" class="form-control" name="nilai_sisa" value="{{ $m->nilai_sisa }}" required>
+                                                            <label>Nilai Sisa</label>
+                                                        </div>
+                                                        <div class="form-floating mb-3">
+                                                            <input type="number" class="form-control" name="umur_ekonomis" value="{{ $m->umur_ekonomis }}" required>
+                                                            <label>Umur Ekonomis (tahun)</label>
+                                                        </div>
+                                                        <div class="form-floating mb-3">
+                                                            <select class="form-select" name="status" required>
+                                                                <option value="aktif" {{ $m->status == 'aktif' ? 'selected' : '' }}>Aktif</option>
+                                                                <option value="tidak aktif" {{ $m->status == 'tidak aktif' ? 'selected' : '' }}>Tidak Aktif</option>
+                                                            </select>
+                                                            <label>Status Mesin</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-warning">Update</button>
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         @endforeach
 
                         @if ($mesin->isEmpty())
@@ -102,61 +173,33 @@
         </div>
     </div>
 </div>
-@endsection
-
-@section('scripts')
-<script>
-    $(document).ready(function () {
-        $('#dataTable').DataTable({
-            paging: true,
-            lengthChange: true,
-            searching: true,
-            ordering: true,
-            info: true,
-            autoWidth: false,
-            responsive: true,
-            pagingType: "full_numbers",
-            columnDefs: [{ orderable: false, targets: -1 }],
-            language: {
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ data per halaman",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                paginate: {
-                    first: "Awal",
-                    last: "Akhir",
-                    next: "›",
-                    previous: "‹"
-                }
-            }
-        });
-    });
-</script>
-@endsection
 
 {{-- Modal Import Mesin --}}
 <div class="modal fade" id="importMesinModal" tabindex="-1" aria-labelledby="importMesinModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form id="formImportMesin" enctype="multipart/form-data">
             @csrf
-            <div class="modal-content">
+            <div class="modal-content shadow">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="importMesinModalLabel">Import Data Mesin (Excel)</h5>
+                    <h5 class="modal-title" id="importMesinModalLabel">Import Data Mesin</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="file_mesin" class="form-label">Pilih File Excel</label>
                         <input type="file" class="form-control" name="file" id="file_mesin" accept=".xlsx, .xls" required>
+                        <small class="text-muted">Format file: .xls, .xlsx</small>
                     </div>
-                    <small class="text-muted">Format yang didukung: .xls, .xlsx</small>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-success">Import</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                 </div>
             </div>
         </form>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -188,6 +231,29 @@
                     console.error(error);
                 });
             }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const hapusButtons = document.querySelectorAll('.btnHapusMesin');
+        hapusButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const form = this.closest('form');
+                Swal.fire({
+                    title: 'Hapus Mesin?',
+                    text: 'Data akan dihapus secara permanen!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
         });
     });
 </script>

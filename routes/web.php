@@ -51,7 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/twisting', [MesinController::class, 'twisting'])->name('twisting');
         Route::get('/aktif', [MesinController::class, 'Aktif'])->name('aktif');
         Route::get('/tidak-aktif', [MesinController::class, 'TidakAktif'])->name('tidakaktif');
-        
+
     });
 
     // 📉 Depresiasi

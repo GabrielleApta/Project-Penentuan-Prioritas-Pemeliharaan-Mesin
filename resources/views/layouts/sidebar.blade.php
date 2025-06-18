@@ -23,34 +23,43 @@
                 </a>
 
                 <!-- Penentuan Prioritas -->
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts">
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePrioritas" aria-expanded="false" aria-controls="collapsePrioritas">
                     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
                     Penentuan Prioritas Pemeliharaan
                     <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                 </a>
 
-                 <div class="collapse" id="collapseLayouts">
+                <div class="collapse" id="collapsePrioritas">
                     <nav class="sb-sidenav-menu-nested nav">
-                        <a class="nav-link" href="{{ route('prioritas.index') }}">
+                        <a class="nav-link {{ request()->routeIs('prioritas.index') ? 'active' : '' }}" href="{{ route('prioritas.index') }}">
                             <i class="fas fa-chart-line me-1"></i> Hasil SAW
                         </a>
-
-                        <a class="nav-link" href="{{ route('kerusakan-tahunan.index') }}">
+                        <a class="nav-link {{ request()->routeIs('kerusakan-tahunan.index') ? 'active' : '' }}" href="{{ route('kerusakan-tahunan.index') }}">
                             <i class="fas fa-history me-1"></i> History Kerusakan
                         </a>
-
-                        <a class="nav-link" href="{{ route('kriteria.index') }}">
+                        <a class="nav-link {{ request()->routeIs('kriteria.index') ? 'active' : '' }}" href="{{ route('kriteria.index') }}">
                             <i class="fas fa-balance-scale me-1"></i> Data Kriteria & Bobot
                         </a>
-
-                        <a class="nav-link" href="{{ route('penilaian.index') }}">
+                        <a class="nav-link {{ request()->routeIs('penilaian.index') ? 'active' : '' }}" href="{{ route('penilaian.index') }}">
                             <i class="fas fa-table me-1"></i> Data Penilaian Mesin
                         </a>
                     </nav>
                 </div>
-           <div class="sb-sidenav-footer">
+
+                <!-- Kelola User (Admin Only) -->
+                @if(Auth::check() && Auth::user()->role === 'admin')
+                    <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-users-cog"></i></div>
+                        Kelola User
+                    </a>
+                @endif
+
+            </div>
+        </div>
+
+        <div class="sb-sidenav-footer">
             <div class="small">Logged in as:</div>
-            {{ Auth::user()->role ?? 'Admin' }}
+            {{ ucfirst(Auth::user()->role ?? 'Guest') }}
         </div>
     </nav>
 </div>

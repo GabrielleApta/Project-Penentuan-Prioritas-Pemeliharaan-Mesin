@@ -61,4 +61,48 @@ class UserController extends Controller
     return view('profile');
 }
 
+ // Tampilkan daftar user
+    public function index()
+{
+    $users = User::all(); // tampilkan semua, termasuk akun yang sedang login
+    return view('pages.users.index', compact('users'));
+}
+
+
+
+    // Tampilkan form edit role
+    public function edit(User $user)
+    {
+        return view('pages.users.edit', compact('user'));
+    }
+
+    // Update role user
+    public function update(Request $request, User $user)
+    {
+        $request->validate([
+            'role' => 'required|in:user,admin',
+        ]);
+
+        $user->role = $request->role;
+        $user->save();
+
+        return redirect()->route('users.index')->with('success', 'Role pengguna berhasil diperbarui.');
+    }
+
+    // Hapus user
+    public function destroy(User $user)
+{
+    // Cegah admin menghapus dirinya sendiri atau sesama admin
+    if ($user->id === auth()->id()) {
+        return redirect()->route('users.index')->with('error', 'Kamu tidak bisa menghapus akunmu sendiri.');
+    }
+
+    if ($user->role === 'admin') {
+        return redirect()->route('users.index')->with('error', 'Tidak bisa menghapus sesama admin!');
+    }
+
+    $user->delete();
+    return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
+}
+
 }

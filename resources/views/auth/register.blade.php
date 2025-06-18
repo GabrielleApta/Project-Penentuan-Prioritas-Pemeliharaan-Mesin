@@ -1,27 +1,29 @@
 @extends('layouts.auth')
 
-@section('title', 'Register')
-
-@section('auth-title', 'Register')
+@section('auth-title', 'Daftar Akun Baru')
 
 @section('content')
-    <form action="{{ route('register') }}" method="POST">
-        @csrf
-        <div class="mb-3">
-            <input type="text" name="name" class="form-control" placeholder="Full Name" required>
-        </div>
-        <div class="mb-3">
-            <input type="email" name="email" class="form-control" placeholder="Email" required>
-        </div>
-        <div class="mb-3">
-            <input type="password" name="password" class="form-control" placeholder="Password" required>
-        </div>
-        <div class="mb-3">
-            <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm Password" required>
-        </div>
-        <button type="submit" class="btn auth-button">Register</button>
-    </form>
-    <div class="mt-3">
-        <span class="small-text">Sudah punya akun? <a href="{{ route('login') }}">Login</a></span>
+<form method="POST" action="{{ route('register') }}">
+    @csrf
+    <div class="mb-3">
+        <label for="name" class="form-label">Nama</label>
+        <input type="text" class="form-control" id="name" name="name" required autofocus>
     </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    <div class="mb-3">
+        <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
+        <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+    </div>
+    <button type="submit" class="btn login-button w-100">Daftar</button>
+    <div class="text-center mt-3">
+        <a href="{{ route('login') }}" class="text-primary">Sudah punya akun? Login di sini</a>
+    </div>
+</form>
 @endsection

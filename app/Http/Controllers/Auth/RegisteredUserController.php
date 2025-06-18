@@ -36,9 +36,7 @@ class RegisteredUserController extends Controller
             'role' => 'user', // Default user biasa
         ]);
 
-        Auth::login($user);
 
-        return redirect()->route('user.dashboard')->with('success', 'Registrasi berhasil! Selamat datang di dashboard user.');
     }
 
     /**
@@ -67,8 +65,6 @@ class RegisteredUserController extends Controller
             'role' => 'admin', // Admin
         ]);
 
-        Auth::login($admin);
-
-        return redirect()->route('admin.dashboard')->with('success', 'Registrasi admin berhasil! Selamat datang di dashboard admin.');
+        
     }
 }
