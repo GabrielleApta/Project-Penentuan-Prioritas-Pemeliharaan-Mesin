@@ -11,10 +11,17 @@
     </ol>
 
     <div class="card mb-4">
-        <div class="card-body">
-            Data mesin produksi benang yang digunakan dalam proses penilaian prioritas pemeliharaan.
+    <div class="card-body">
+        <div class="alert alert-info d-flex align-items-start">
+            <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
+            <div>
+                Data mesin di bawah ini menjadi dasar dalam proses perhitungan prioritas pemeliharaan berbasis metode <em><strong> Straight Line</strong></em> dan <strong>SAW</strong>.<br>
+                Pastikan seluruh informasi mesin seperti harga beli, tahun pembelian sudah terisi dengan benar.
+            </div>
         </div>
     </div>
+</div>
+
 
     <div class="card mb-4 shadow">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -24,19 +31,19 @@
         <div class="card-body">
             @if(auth()->user()->role === 'admin')
                 <a href="{{ route('mesin.create') }}" class="btn btn-primary mb-3">
-                    <i class="fas fa-plus"></i> Tambah Mesin
+                    <i class="fas fa-plus"></i> Tambah Data
                 </a>
 
-                <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#importMesinModal">
-                    <i class="fas fa-file-import"></i> Import Mesin
+                <button type="button" class="btn btn-outline-secondary mb-3" data-bs-toggle="modal" data-bs-target="#importMesinModal">
+                    <i class="fas fa-file-import"></i> Import Data
                 </button>
             @endif
 
-            <a href="{{ route('mesin.exportExcel') }}" class="btn btn-success mb-3">
+            <a href="{{ route('mesin.exportExcel') }}" class="btn btn-outline-success mb-3">
                 <i class="fas fa-file-excel"></i> Export Excel
             </a>
 
-            <a href="{{ route('mesin.mesin_pdf') }}" class="btn btn-danger mb-3" target="_blank">
+            <a href="{{ route('mesin.mesin_pdf') }}" class="btn btn-outline-danger mb-3" target="_blank">
                 <i class="fas fa-file-pdf"></i> Export PDF
             </a>
 
@@ -45,18 +52,19 @@
             @endif
 
             <div class="table-responsive">
-                <table id="dataTable" class="table table-bordered table-hover table-striped border text-center align-middle">
+                <table id="dataTable" class="table table-striped table-bordered text-center align-middle" style="width:100%">
                     <thead class="thead-dark text-nowrap">
                         <tr>
-                            <th>No</th>
-                            <th>Nama Mesin</th>
-                            <th>Kode Mesin</th>
-                            <th>Tahun Pembelian</th>
-                            <th>Spesifikasi Mesin</th>
-                            <th>Daya Motor</th>
-                            <th>Lokasi Mesin</th>
+                            <th class="text-center">No</th>
+                            <th class="text-center">Nama Mesin</th>
+                            <th class="text-center">Kode Mesin</th>
+                            <th class="text-center">Tahun Pembelian</th>
+                            <th class="text-center">Spesifikasi Mesin</th>
+                            <th class="text-center">Daya Motor</th>
+                            <th class="text-center">Lokasi Mesin</th>
+
                             @if(auth()->user()->role === 'admin')
-                                <th>Aksi</th>
+                                <th class="text-center">Aksi</th>
                             @endif
                         </tr>
                     </thead>
@@ -73,7 +81,7 @@
                                 </td>
                                 <td>{{ $m->lokasi_mesin }}</td>
                                 @if(auth()->user()->role === 'admin')
-                                    <td class="text-nowrap">
+                                    <td class="text-nowrap" >
                                         <div class="d-flex gap-2">
                                             <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditMesin{{ $m->id }}">
                                                 <i class="fas fa-edit"></i> Edit
@@ -88,6 +96,7 @@
                                         </div>
                                     </td>
                                 @endif
+
                             </tr>
 
                             {{-- Modal Edit Mesin --}}
@@ -257,4 +266,38 @@
         });
     });
 </script>
+@endpush
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+@endpush
+
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#dataTable').DataTable({
+                responsive: true,
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data per halaman",
+                    zeroRecords: "Data tidak ditemukan",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data tersedia",
+                    infoFiltered: "(difilter dari _MAX_ total data)",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "→",
+                        previous: "←"
+                    },
+                },
+                lengthMenu: [[5, 10, 15, 25, -1], [5, 10, 15, 25, "Semua"]],
+                pageLength: 10
+            });
+        });
+    </script>
 @endpush

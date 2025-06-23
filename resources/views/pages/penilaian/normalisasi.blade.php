@@ -3,21 +3,23 @@
 @section('title', 'Normalisasi & Skor Akhir (SAW)')
 
 @section('content')
-<div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Hasil Normalisasi & Skor Akhir (Metode SAW)</h1>
+<div class="container-fluid px-2">
+    <h1 class="mt-4">Hasil Normalisasi & Skor Akhir (Metode SAW)</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Data Normalisasi dan Skor Akhir</li>
+    </ol>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-                Tabel Normalisasi Kriteria & Skor Akhir
-            </h6>
+    <div class="card mb-4 shadow">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div><i class="fas fa-table me-1"></i> Tabel Normalisasi Kriteria & Skor Akhir</div>
         </div>
 
+        {{-- Tabel Normalisasi --}}
         <div class="card-body">
-            {{-- Tabel Normalisasi --}}
             <div class="table-responsive">
-                <table class="table table-bordered table-hover text-center">
-                    <thead class="thead-dark">
+                <table id="dataTable" class="table table-striped table-bordered text-center align-middle" style="width:100%">
+                    <thead class="thead-dark text-nowrap">
                         <tr>
                             <th>Nama Mesin</th>
                             <th>Norm. Akumulasi Penyusutan</th>
@@ -58,7 +60,9 @@
 
             {{-- Tombol Kembali --}}
             <div class="mt-4">
-                <a href="{{ route('penilaian.index') }}" class="btn btn-secondary">⬅️ Kembali ke Penilaian</a>
+                <a href="{{ route('penilaian.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Kembali ke Penilaian
+                </a>
             </div>
         </div>
     </div>

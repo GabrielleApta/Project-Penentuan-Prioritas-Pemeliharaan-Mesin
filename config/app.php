@@ -46,7 +46,7 @@ return [
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     */
-    'locale' => 'en',
+    'locale' => 'id',
     'fallback_locale' => 'en',
 
     /*

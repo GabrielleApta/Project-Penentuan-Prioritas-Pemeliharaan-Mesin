@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Imports\KerusakanTahunanImport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\KerusakanTahunanExport;
 
 class KerusakanTahunanController extends Controller
 {
@@ -143,5 +146,55 @@ public function import(Request $request)
         return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan: ' . $e->getMessage()]);
     }
 }
+public function exportPdfFiltered(Request $request)
+{
+    $request->validate([
+        'tahun' => 'nullable|integer',
+        'mesin_id' => 'nullable|exists:mesin,id',
+    ]);
+
+    $query = KerusakanTahunan::with('mesin');
+    $namaMesin = null;
+
+    if ($request->filled('tahun')) {
+        $query->where('tahun', $request->tahun);
+    }
+
+    if ($request->filled('mesin_id')) {
+        $query->where('mesin_id', $request->mesin_id);
+        $mesin = Mesin::find($request->mesin_id);
+        $namaMesin = $mesin ? $mesin->nama_mesin : null;
+    }
+
+    $data = $query->get();
+
+    // Generate Nama File
+    $filename = 'Laporan Kerusakan';
+
+    if ($request->filled('tahun') && $namaMesin) {
+        $filename .= ' ' . Str::slug($namaMesin, '_') . ' Tahun ' . $request->tahun;
+    } elseif ($request->filled('tahun')) {
+        $filename .= ' Tahun ' . $request->tahun;
+    } elseif ($namaMesin) {
+        $filename .= ' ' . Str::slug($namaMesin, '_');
+    }
+
+    $filename .= '.pdf';
+
+    // Load PDF view
+    $pdf = Pdf::loadView('pages.kerusakan_tahunan.pdf_filtered', [
+        'data' => $data,
+        'tahun' => $request->tahun,
+        'namaMesin' => $namaMesin,
+        'pdf' => true,
+    ])->setPaper('a4', 'landscape');
+
+    return $pdf->stream($filename);
+}
+
+public function exportExcel()
+    {
+        return Excel::download(new KerusakanTahunanExport, 'kerusakan_tahunan.xlsx');
+    }
 
 }

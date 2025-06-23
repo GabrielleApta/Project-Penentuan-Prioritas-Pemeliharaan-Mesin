@@ -39,30 +39,41 @@ class MesinController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'nama_mesin'      => 'required|string|max:255',
-            'kode_mesin'      => 'required|string|unique:mesin,kode_mesin|max:50',
-            'harga_beli'      => 'required|numeric|min:0',
-            'tahun_pembelian' => 'required|integer|min:0',
-            'spesifikasi_mesin' => 'required|string|max:255',
-            'daya_motor'      => 'required|numeric|min:0',
-            'lokasi_mesin'    => 'required|string|max:255',
-            'nilai_sisa'      => 'required|numeric|min:0',
-            'umur_ekonomis'   => 'required|integer|min:1',
-            'akumulasi_penyusutan'=> 'required|numeric|min:0'
-        ]);
+{
+    $request->validate([
+        'nama_mesin'        => 'required|string|max:255',
+        'kode_mesin'        => 'required|string|unique:mesin,kode_mesin|max:50',
+        'harga_beli'        => 'required|numeric|min:0',
+        'tahun_pembelian'   => 'required|integer|min:0',
+        'spesifikasi_mesin' => 'required|string|max:255',
+        'daya_motor'        => 'required|numeric|min:0',
+        'lokasi_mesin'      => 'required|string|max:255',
+        'nilai_sisa'        => 'required|numeric|min:0',
+        'umur_ekonomis'     => 'required|integer|min:1',
+        'status'            => 'required|in:aktif,tidak aktif',
+    ]);
+
+    try {
+        \DB::beginTransaction();
 
         // Simpan data mesin
         $mesin = Mesin::create($request->only([
-            'nama_mesin', 'kode_mesin', 'harga_beli', 'tahun_pembelian',
-            'spesifikasi_mesin', 'daya_motor', 'lokasi_mesin', 'nilai_sisa', 'umur_ekonomis'
+            'nama_mesin',
+            'kode_mesin',
+            'harga_beli',
+            'tahun_pembelian',
+            'spesifikasi_mesin',
+            'daya_motor',
+            'lokasi_mesin',
+            'nilai_sisa',
+            'umur_ekonomis',
+            'status'
         ]));
 
-        // 🔹 Hitung depresiasi tahunan
-        $harga_beli = (float) $mesin->harga_beli;
-        $nilai_sisa = (float) $mesin->nilai_sisa;
-        $umur_ekonomis = (int) $mesin->umur_ekonomis;
+        // Hitung depresiasi tahunan dan simpan
+        $harga_beli     = (float) $mesin->harga_beli;
+        $nilai_sisa     = (float) $mesin->nilai_sisa;
+        $umur_ekonomis  = (int) $mesin->umur_ekonomis;
 
         if ($umur_ekonomis > 0) {
             $depresiasi_tahunan = ($harga_beli - $nilai_sisa) / $umur_ekonomis;
@@ -76,17 +87,14 @@ class MesinController extends Controller
             }
         }
 
-        // 🔹 Otomatis Tambahkan Data ke `penilaian_mesin`
-        foreach (Kriteria::all() as $k) {
-            PenilaianMesin::create([
-                'mesin_id'    => $mesin->id,
-                'kriteria_id' => $k->id,
-                'nilai'       => 0,
-            ]);
-        }
+        \DB::commit();
 
         return redirect()->route('mesin.index')->with('success', 'Mesin berhasil ditambahkan!');
+    } catch (\Exception $e) {
+        \DB::rollBack();
+        return redirect()->back()->with('error', 'Gagal menyimpan data mesin: ' . $e->getMessage());
     }
+}
 
     public function edit(Mesin $mesin)
     {
@@ -105,11 +113,13 @@ class MesinController extends Controller
             'lokasi_mesin'    => 'required|string|max:255',
             'nilai_sisa'      => 'required|numeric|min:0',
             'umur_ekonomis'   => 'required|integer|min:1',
+            'status'          => 'required|in:aktif,tidak aktif',
+
         ]);
 
         $mesin->update($request->only([
             'nama_mesin', 'kode_mesin', 'harga_beli', 'tahun_pembelian',
-            'spesifikasi_mesin', 'daya_motor', 'lokasi_mesin', 'nilai_sisa', 'umur_ekonomis'
+            'spesifikasi_mesin', 'daya_motor', 'lokasi_mesin', 'nilai_sisa', 'umur_ekonomis', 'status'
         ]));
 
         return redirect()->route('mesin.index')->with('success', 'Mesin berhasil diperbarui!');

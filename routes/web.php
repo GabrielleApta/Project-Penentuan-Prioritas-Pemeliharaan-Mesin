@@ -98,6 +98,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/kerusakan-tahunan/rata-rata', [KerusakanTahunanController::class, 'rataRataSkor'])->name('kerusakan-tahunan.rata-rata');
     Route::get('/kerusakan/import', [KerusakanTahunanController::class, 'showImportForm'])->name('kerusakan.import.form');
     Route::post('/kerusakan/import', [KerusakanTahunanController::class, 'import'])->name('kerusakan.import');
+    Route::get('kerusakan-tahunan/export-excel', [KerusakanTahunanController::class, 'exportExcel'])->name('kerusakan-tahunan.exportExcel');
+    Route::get('kerusakan-tahunan/export-pdf', [KerusakanTahunanController::class, 'exportPDF'])->name('kerusakan-tahunan.pdf');
+    Route::post('/kerusakan-tahunan/export-pdf-filter', [KerusakanTahunanController::class, 'exportPdfFiltered'])->name('kerusakan-tahunan.exportPdfFiltered');
+
 
     // 📑 Laporan
     Route::prefix('laporan')->name('laporan.')->group(function () {

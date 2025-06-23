@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Data Mesin</title>
+    <title>Laporan Kerusakan Mesin</title>
     <style>
         body {
             font-family: 'Times New Roman', Times, serif;
@@ -52,7 +52,7 @@
             font-weight: bold;
             font-size: 16pt;
             text-transform: uppercase;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         /* TABEL */
@@ -97,8 +97,8 @@
         }
     </style>
 </head>
-
 <body>
+
     {{-- KOP --}}
     <table class="kop-table">
         <tr>
@@ -113,10 +113,17 @@
         </tr>
     </table>
 
-        <hr class="double-line">
+    <hr class="double-line">
 
+    {{-- JUDUL --}}
     <div class="judul-laporan">
-        LAPORAN DATA MESIN
+        LAPORAN KERUSAKAN MESIN
+        @if (request('tahun'))
+            TAHUN {{ request('tahun') }}
+        @endif
+        @if (request('mesin_id') && $data->count() && $data->first()->mesin)
+            - {{ strtoupper($data->first()->mesin->nama_mesin) }}
+        @endif
     </div>
 
     {{-- TABEL --}}
@@ -125,35 +132,30 @@
             <tr>
                 <th>No</th>
                 <th>Nama Mesin</th>
-                <th>Kode Mesin</th>
-                <th>Tahun Pembelian</th>
-                <th>Spesifikasi Mesin</th>
-                <th>Daya Motor</th>
-                <th>Lokasi Mesin</th>
+                <th>Tahun</th>
+                <th>Kerusakan Ringan</th>
+                <th>Downtime Ringan (jam)</th>
+                <th>Kerusakan Parah</th>
+                <th>Downtime Parah (jam)</th>
             </tr>
         </thead>
         <tbody>
-            @php $totalDayaMotor = 0; @endphp
-            @foreach ($mesin as $index => $m)
-                @php $totalDayaMotor += $m->daya_motor; @endphp
+            @forelse ($data as $index => $item)
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $m->nama_mesin }}</td>
-                    <td>{{ $m->kode_mesin }}</td>
-                    <td>{{ $m->tahun_pembelian }}</td>
-                    <td>{{ $m->spesifikasi_mesin }}</td>
-                    <td>{{ (fmod($m->daya_motor, 1) != 0) ? str_replace('.', ',', rtrim($m->daya_motor, '0')) : (int) $m->daya_motor }}</td>
-                    <td>{{ $m->lokasi_mesin }}</td>
+                    <td class="text-start">{{ $item->mesin->nama_mesin }}</td>
+                    <td>{{ $item->tahun }}</td>
+                    <td>{{ $item->kerusakan_ringan }}</td>
+                    <td>{{ $item->downtime_ringan }}</td>
+                    <td>{{ $item->kerusakan_parah }}</td>
+                    <td>{{ $item->downtime_parah }}</td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="7">Tidak ada data ditemukan.</td>
+                </tr>
+            @endforelse
         </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="5">Jumlah</td>
-                <td>{{ (fmod($totalDayaMotor, 1) != 0) ? str_replace('.', ',', rtrim($totalDayaMotor, '0')) : (int) $totalDayaMotor }}</td>
-                <td></td>
-            </tr>
-        </tfoot>
     </table>
 
     {{-- TANDA TANGAN --}}
@@ -172,13 +174,15 @@
         <td style="width: 50%; margin-bottom: 35px; border: none;">
             Cirebon, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
             <strong>Koordinator Mekanik</strong><br><br><br><br>
-
+            {{-- Area tanda tangan --}}
+            <div style="height: 60px;"></div>
             <u><strong>(...................................)</strong></u><br>
         </td>
     </tr>
 </table>
 
-{{-- NOMOR HALAMAN --}}
+
+    {{-- NOMOR HALAMAN --}}
     @if (isset($pdf))
     <script type="text/php">
         if (isset($pdf)) {
@@ -188,5 +192,6 @@
         }
     </script>
     @endif
+
 </body>
 </html>

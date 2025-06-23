@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Mesin;
 use App\Models\HasilSaw;
+use App\Models\PenilaianMesin;
 use Illuminate\Support\Facades\DB;
 use PDF;
 
@@ -23,48 +24,49 @@ class PrioritasController extends Controller
 
     public function hitungSAW()
     {
-        $mesins = Mesin::with(['depresiasi', 'kerusakanTahunan'])->get();
+        $tahunPenilaian = 2024;
 
-        // Tahun patokan
-        $tahunSekarang = date('Y');
-        $tahunAwal = $tahunSekarang - 2;
+        $data_penilaian = PenilaianMesin::with('mesin')
+            ->where('tahun_penilaian', $tahunPenilaian)
+            ->get();
 
-        $data_nilai = [];
-        foreach ($mesins as $mesin) {
-            // Ambil akumulasi penyusutan terbaru
-            $depresiasiTerakhir = $mesin->depresiasi->sortByDesc('tahun')->first();
-            $akumulasi = $depresiasiTerakhir ? $depresiasiTerakhir->akumulasi_penyusutan : 0;
-
-            $usia = $tahunSekarang - $mesin->tahun_pembelian;
-            $frekuensi = $mesin->skorFrekuensiKerusakan($tahunAwal, $tahunSekarang);
-            $downtime = $mesin->skorDowntime($tahunAwal, $tahunSekarang);
-
-            $data_nilai[] = [
-                'mesin_id' => $mesin->id,
-                'akumulasi_penyusutan' => $akumulasi,
-                'usia_mesin' => $usia,
-                'frekuensi_kerusakan' => $frekuensi,
-                'waktu_downtime' => $downtime,
-            ];
+        if ($data_penilaian->isEmpty()) {
+            return redirect()->back()->with('error', 'Data penilaian belum tersedia untuk tahun ' . $tahunPenilaian);
         }
 
-        // Normalisasi
-        $kriteria = ['akumulasi_penyusutan', 'usia_mesin', 'frekuensi_kerusakan', 'waktu_downtime'];
-        $jenis = ['cost', 'cost', 'cost', 'cost']; // Semua cost
-        $bobot = ['akumulasi_penyusutan' => 0.3, 'usia_mesin' => 0.3, 'frekuensi_kerusakan' => 0.2, 'waktu_downtime' => 0.2];
+        // Ambil data mentah
+        $data_nilai = $data_penilaian->map(function ($item) {
+            return [
+                'mesin_id' => $item->mesin_id,
+                'akumulasi_penyusutan' => $item->akumulasi_penyusutan,
+                'usia_mesin' => $item->usia_mesin,
+                'frekuensi_kerusakan' => $item->frekuensi_kerusakan,
+                'waktu_downtime' => $item->waktu_downtime,
+            ];
+        })->toArray();
 
+        // Kriteria & Bobot SAW
+        $kriteria = ['akumulasi_penyusutan', 'usia_mesin', 'frekuensi_kerusakan', 'waktu_downtime'];
+        $bobot = [
+            'akumulasi_penyusutan' => 0.3,
+            'usia_mesin' => 0.3,
+            'frekuensi_kerusakan' => 0.2,
+            'waktu_downtime' => 0.2,
+        ];
+
+        // Normalisasi (semua kriteria bertipe cost → min / value)
         $normalisasi = [];
-        foreach ($kriteria as $i => $k) {
+        foreach ($kriteria as $k) {
             $values = array_column($data_nilai, $k);
-            $max = max($values);
-            $min = min($values);
+            $min = min($values) ?: 0.0001; // Hindari divide by zero
 
             foreach ($data_nilai as $j => $item) {
+                if (!isset($normalisasi[$j])) {
+                    $normalisasi[$j] = ['mesin_id' => $item['mesin_id']];
+                }
+
                 $val = $item[$k];
-                if (!isset($normalisasi[$j])) $normalisasi[$j] = ['mesin_id' => $item['mesin_id']];
-                $normalisasi[$j][$k] = $jenis[$i] === 'cost'
-                    ? ($val > 0 ? $min / $val : 0)
-                    : ($max > 0 ? $val / $max : 0);
+                $normalisasi[$j][$k] = $val > 0 ? $min / $val : 0;
             }
         }
 
@@ -75,16 +77,21 @@ class PrioritasController extends Controller
             foreach ($bobot as $k => $b) {
                 $skor += $row[$k] * $b;
             }
-            $hasil[] = ['mesin_id' => $row['mesin_id'], 'skor_akhir' => round($skor, 4)];
+
+            $hasil[] = [
+                'mesin_id' => $row['mesin_id'],
+                'skor_akhir' => round($skor, 4),
+            ];
         }
 
+        // Urutkan dan beri ranking
         usort($hasil, fn($a, $b) => $b['skor_akhir'] <=> $a['skor_akhir']);
 
-        // Simpan ke DB
         DB::table('hasil_saw')->truncate();
         foreach ($hasil as $i => &$row) {
             $row['rangking'] = $i + 1;
         }
+
         HasilSaw::insert($hasil);
 
         return redirect()->route('prioritas.index')->with('success', 'Perhitungan SAW berhasil dilakukan.');
@@ -92,46 +99,32 @@ class PrioritasController extends Controller
 
     public function detailSAW($mesin_id)
     {
-        $mesin = Mesin::with(['depresiasi', 'kerusakanTahunan'])->find($mesin_id);
-        if (!$mesin) return redirect()->route('prioritas.index')->with('error', 'Mesin tidak ditemukan.');
+        $tahunPenilaian = 2024;
 
-        $tahunSekarang = date('Y');
-        $tahunAwal = $tahunSekarang - 2;
-
-        $depresiasiTerakhir = $mesin->depresiasi->sortByDesc('tahun')->first();
-        $akumulasi = $depresiasiTerakhir ? $depresiasiTerakhir->akumulasi_penyusutan : 0;
-
-        $usia = $tahunSekarang - $mesin->tahun_pembelian;
-        $frekuensi = $mesin->skorFrekuensiKerusakan($tahunAwal, $tahunSekarang);
-        $downtime = $mesin->skorDowntime($tahunAwal, $tahunSekarang);
+        $penilaian = PenilaianMesin::where('mesin_id', $mesin_id)
+            ->where('tahun_penilaian', $tahunPenilaian)
+            ->firstOrFail();
 
         $data = [
-            'akumulasi_penyusutan' => $akumulasi,
-            'usia_mesin' => $usia,
-            'frekuensi_kerusakan' => $frekuensi,
-            'waktu_downtime' => $downtime,
+            'akumulasi_penyusutan' => $penilaian->akumulasi_penyusutan,
+            'usia_mesin' => $penilaian->usia_mesin,
+            'frekuensi_kerusakan' => $penilaian->frekuensi_kerusakan,
+            'waktu_downtime' => $penilaian->waktu_downtime,
         ];
 
-        // Normalisasi ulang manual untuk satu mesin
-        $semua = Mesin::with(['depresiasi', 'kerusakanTahunan'])->get();
-        $all_data = [];
-        foreach ($semua as $m) {
-            $depresiasi = $m->depresiasi->sortByDesc('tahun')->first();
-            $all_data[] = [
-                'akumulasi_penyusutan' => $depresiasi ? $depresiasi->akumulasi_penyusutan : 0,
-                'usia_mesin' => $tahunSekarang - $m->tahun_pembelian,
-                'frekuensi_kerusakan' => $m->skorFrekuensiKerusakan($tahunAwal, $tahunSekarang),
-                'waktu_downtime' => $m->skorDowntime($tahunAwal, $tahunSekarang),
-            ];
-        }
+        $semua = PenilaianMesin::where('tahun_penilaian', $tahunPenilaian)->get();
 
         $normalisasi = [];
-        $bobot = ['akumulasi_penyusutan' => 0.3, 'usia_mesin' => 0.3, 'frekuensi_kerusakan' => 0.2, 'waktu_downtime' => 0.2];
+        $bobot = [
+            'akumulasi_penyusutan' => 0.3,
+            'usia_mesin' => 0.3,
+            'frekuensi_kerusakan' => 0.2,
+            'waktu_downtime' => 0.2,
+        ];
 
         foreach ($data as $key => $val) {
-            $values = array_column($all_data, $key);
-            $max = max($values);
-            $min = min($values);
+            $values = $semua->pluck($key)->toArray();
+            $min = min($values) ?: 0.0001;
 
             $normalisasi[$key] = $val > 0 ? $min / $val : 0;
         }
@@ -141,7 +134,12 @@ class PrioritasController extends Controller
             $skor_akhir += ($normalisasi[$k] ?? 0) * $b;
         }
 
-        return view('pages.prioritas.detail', compact('mesin', 'data', 'normalisasi', 'skor_akhir'));
+        return view('pages.prioritas.detail', [
+            'mesin' => $penilaian->mesin,
+            'data' => $data,
+            'normalisasi' => $normalisasi,
+            'skor_akhir' => $skor_akhir,
+        ]);
     }
 
     public function printPDF()
@@ -158,38 +156,34 @@ class PrioritasController extends Controller
 
     private function cetakDetail($mesin_id, $isPDF = false)
     {
-        $mesin = Mesin::with(['depresiasi', 'kerusakanTahunan'])->find($mesin_id);
-        if (!$mesin) return redirect()->route('prioritas.index')->with('error', 'Mesin tidak ditemukan.');
+        $tahunPenilaian = 2024;
 
-        $tahunSekarang = date('Y');
-        $tahunAwal = $tahunSekarang - 2;
+        $penilaian = PenilaianMesin::with('mesin')
+            ->where('mesin_id', $mesin_id)
+            ->where('tahun_penilaian', $tahunPenilaian)
+            ->firstOrFail();
 
-        $depresiasi = $mesin->depresiasi->sortByDesc('tahun')->first();
         $data = [
-            'akumulasi_penyusutan' => $depresiasi ? $depresiasi->akumulasi_penyusutan : 0,
-            'usia_mesin' => $tahunSekarang - $mesin->tahun_pembelian,
-            'frekuensi_kerusakan' => $mesin->skorFrekuensiKerusakan($tahunAwal, $tahunSekarang),
-            'waktu_downtime' => $mesin->skorDowntime($tahunAwal, $tahunSekarang),
+            'akumulasi_penyusutan' => $penilaian->akumulasi_penyusutan,
+            'usia_mesin' => $penilaian->usia_mesin,
+            'frekuensi_kerusakan' => $penilaian->frekuensi_kerusakan,
+            'waktu_downtime' => $penilaian->waktu_downtime,
         ];
 
-        $semua = Mesin::with(['depresiasi', 'kerusakanTahunan'])->get();
-        $all_data = [];
-        foreach ($semua as $m) {
-            $dep = $m->depresiasi->sortByDesc('tahun')->first();
-            $all_data[] = [
-                'akumulasi_penyusutan' => $dep ? $dep->akumulasi_penyusutan : 0,
-                'usia_mesin' => $tahunSekarang - $m->tahun_pembelian,
-                'frekuensi_kerusakan' => $m->skorFrekuensiKerusakan($tahunAwal, $tahunSekarang),
-                'waktu_downtime' => $m->skorDowntime($tahunAwal, $tahunSekarang),
-            ];
-        }
+        $semua = PenilaianMesin::where('tahun_penilaian', $tahunPenilaian)->get();
 
         $normalisasi = [];
-        $bobot = ['akumulasi_penyusutan' => 0.3, 'usia_mesin' => 0.3, 'frekuensi_kerusakan' => 0.2, 'waktu_downtime' => 0.2];
+        $bobot = [
+            'akumulasi_penyusutan' => 0.3,
+            'usia_mesin' => 0.3,
+            'frekuensi_kerusakan' => 0.2,
+            'waktu_downtime' => 0.2,
+        ];
 
         foreach ($data as $key => $val) {
-            $values = array_column($all_data, $key);
-            $min = min($values);
+            $values = $semua->pluck($key)->toArray();
+            $min = min($values) ?: 0.0001;
+
             $normalisasi[$key] = $val > 0 ? $min / $val : 0;
         }
 
@@ -199,10 +193,20 @@ class PrioritasController extends Controller
         }
 
         if ($isPDF) {
-            $pdf = PDF::loadView('pages.prioritas.detailPDF', compact('mesin', 'data', 'normalisasi', 'skor_akhir'));
+            $pdf = PDF::loadView('pages.prioritas.detailPDF', [
+                'mesin' => $penilaian->mesin,
+                'data' => $data,
+                'normalisasi' => $normalisasi,
+                'skor_akhir' => $skor_akhir,
+            ]);
             return $pdf->stream("detail_saw_{$mesin_id}.pdf");
         }
 
-        return view('pages.prioritas.detail', compact('mesin', 'data', 'normalisasi', 'skor_akhir'));
+        return view('pages.prioritas.detail', [
+            'mesin' => $penilaian->mesin,
+            'data' => $data,
+            'normalisasi' => $normalisasi,
+            'skor_akhir' => $skor_akhir,
+        ]);
     }
 }
