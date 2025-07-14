@@ -198,6 +198,7 @@ class PrioritasController extends Controller
                 'data' => $data,
                 'normalisasi' => $normalisasi,
                 'skor_akhir' => $skor_akhir,
+                'pdf' => true,
             ]);
             return $pdf->stream("detail_saw_{$mesin_id}.pdf");
         }

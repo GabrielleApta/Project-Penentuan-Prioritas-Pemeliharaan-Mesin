@@ -38,48 +38,29 @@ class KriteriaController extends Controller
         return redirect()->route('kriteria.index')->with('success', 'Kriteria berhasil ditambahkan');
     }
 
-    public function edit($id)
-    {
-        $kriteria = Kriteria::find($id);
+    public function edit(Kriteria $kriteria)
+{
+    return view('pages.kriteria.edit', compact('kriteria'));
+}
 
-        if (!$kriteria) {
-            return redirect()->route('kriteria.index')->with('error', 'Data tidak ditemukan');
-        }
+    public function update(Request $request, Kriteria $kriteria)
+{
+    $validated = $request->validate([
+        'nama_kriteria'   => 'required|string|max:255',
+        'bobot'           => 'required|numeric|between:0,100',
+        'jenis_kriteria'  => 'required|in:benefit,cost',
+    ]);
 
-        return view('pages.kriteria.edit', compact('kriteria'));
-    }
+    $validated['bobot'] = $validated['bobot'] / 100;
+    $kriteria->update($validated);
 
-    public function update(Request $request, $id)
-    {
-        $kriteria = Kriteria::find($id);
+    return redirect()->route('kriteria.index')->with('success', 'Kriteria berhasil diperbarui');
+}
 
-        if (!$kriteria) {
-            return redirect()->route('kriteria.index')->with('error', 'Data tidak ditemukan');
-        }
+    public function destroy(Kriteria $kriteria)
+{
+    $kriteria->delete();
 
-        $validated = $request->validate([
-            'nama_kriteria'   => 'required|string|max:255',
-            'bobot'           => 'required|numeric|between:0,100',
-            'jenis_kriteria'  => 'required|in:benefit,cost',
-        ]);
-
-        $validated['bobot'] = $validated['bobot'] / 100;
-
-        $kriteria->update($validated);
-
-        return redirect()->route('kriteria.index')->with('success', 'Kriteria berhasil diperbarui');
-    }
-
-    public function destroy($id)
-    {
-        $kriteria = Kriteria::find($id);
-
-        if (!$kriteria) {
-            return redirect()->route('kriteria.index')->with('error', 'Data tidak ditemukan');
-        }
-
-        $kriteria->delete();
-
-        return redirect()->route('kriteria.index')->with('success', 'Kriteria berhasil dihapus');
-    }
+    return redirect()->route('kriteria.index')->with('success', 'Kriteria berhasil dihapus');
+}
 }

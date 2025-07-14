@@ -16,61 +16,100 @@ class DepresiasiController extends Controller
         $this->middleware('user.readonly')->only(['create', 'store', 'edit', 'update', 'destroy']);
     }
 
-    public function index()
-    {
-        $mesins = Mesin::all();
+    public function index(Request $request)
+{
+    $mesins = Mesin::all();
 
-foreach ($mesins as $mesin) {
-    $harga_beli = is_numeric($mesin->harga_beli) ? (float) $mesin->harga_beli : 0;
-    $nilai_sisa = is_numeric($mesin->nilai_sisa) ? (float) $mesin->nilai_sisa : 0;
-    $umur_ekonomis = is_numeric($mesin->umur_ekonomis) ? (int) $mesin->umur_ekonomis : 0;
+    $tahunSekarang = now()->year;
 
-    $depresiasi_tahunan = ($umur_ekonomis > 0) ? ($harga_beli - $nilai_sisa) / $umur_ekonomis : 0;
+    foreach ($mesins as $mesin) {
+        // Hitung depresiasi tahunan
+        $harga = (float) $mesin->harga_beli;
+        $sisa = (float) $mesin->nilai_sisa;
+        $umur = (int) $mesin->umur_ekonomis;
+        $depresiasi = ($umur > 0) ? ($harga - $sisa) / $umur : 0;
+        $mesin->depresiasi_tahunan = $depresiasi;
 
-    // Tambahkan nilai ke dalam objek mesin
-    $mesin->depresiasi_tahunan = $depresiasi_tahunan;
-
-    // lanjutkan logika buat depresiasi per tahun...
-    $tahun_sekarang = now()->year;
-    $tahun_akhir = max($mesin->tahun_pembelian + $umur_ekonomis - 1, $tahun_sekarang);
-    $akumulasi = 0;
-
-    for ($i = 0; $i <= ($tahun_akhir - $mesin->tahun_pembelian); $i++) {
-    $tahun = $mesin->tahun_pembelian + $i;
-
-    if ($i < $umur_ekonomis) {
-        $penyusutan = $depresiasi_tahunan;
-        $akumulasi += $penyusutan;
-        $nilai_buku = max($harga_beli - $akumulasi, $nilai_sisa);
-    } else {
-        $penyusutan = 0;
-        $akumulasi = $harga_beli - $nilai_sisa;
-        $nilai_buku = $nilai_sisa;
+        // Ambil depresiasi tahun sekarang
+        $depresiasiTahunIni = $mesin->depresiasi()->where('tahun', $tahunSekarang)->first();
+        $mesin->total_akumulasi = $depresiasiTahunIni->akumulasi_penyusutan ?? 0;
+        $mesin->nilai_buku_akhir = $depresiasiTahunIni->nilai_buku ?? 0;
     }
-
-    $existing = Depresiasi::where('mesin_id', $mesin->id)->where('tahun', $tahun)->first();
-    if (!$existing) {
-        Depresiasi::create([
-            'mesin_id' => $mesin->id,
-            'tahun' => $tahun,
-            'penyusutan' => $penyusutan,
-            'akumulasi_penyusutan' => $akumulasi,
-            'nilai_buku' => $nilai_buku,
-        ]);
-    }
-}
-// ⬇ Tambahan: ambil akumulasi penyusutan tahun terakhir
-        $latestDepresiasi = Depresiasi::where('mesin_id', $mesin->id)
-            ->orderByDesc('tahun')
-            ->first();
-
-        $mesin->total_akumulasi = $latestDepresiasi ? $latestDepresiasi->akumulasi_penyusutan : 0;
-        $mesin->nilai_buku_akhir = $latestDepresiasi ? $latestDepresiasi->nilai_buku : 0;
-
-    }
-
     return view('pages.depresiasi.index', compact('mesins'));
 }
+
+    public function generate()
+    {
+        $kode = 'SL-' . now()->format('YmdHis');
+        $userId = auth()->id() ?? 1;
+
+        foreach (Mesin::all() as $mesin) {
+            $this->hitungDanSimpanDepresiasi($mesin, $kode, $userId);
+        }
+
+        return redirect()->route('depresiasi.index')->with('success', 'Data depresiasi berhasil dihitung.');
+    }
+
+    public function reset()
+    {
+        Depresiasi::truncate();
+
+        $kode = 'SL-' . now()->format('YmdHis');
+        $userId = auth()->id() ?? 1;
+
+        foreach (Mesin::all() as $mesin) {
+            $this->hitungDanSimpanDepresiasi($mesin, $kode, $userId);
+        }
+
+        return redirect()->route('depresiasi.index')->with('success', 'Data depresiasi berhasil di-reset dan dihitung ulang.');
+    }
+
+    private function hitungDanSimpanDepresiasi($mesin, $kode, $userId)
+    {
+        $harga = (float) $mesin->harga_beli;
+        $sisa = (float) $mesin->nilai_sisa;
+        $umur = (int) $mesin->umur_ekonomis;
+
+        $depresiasi = $umur > 0 ? ($harga - $sisa) / $umur : 0;
+        $tahun_awal = $mesin->tahun_pembelian;
+        $tahun_akhir = max($tahun_awal + $umur - 1, now()->year);
+
+        $akumulasi = 0;
+
+        for ($i = 0; $i <= ($tahun_akhir - $tahun_awal); $i++) {
+            $tahun = $tahun_awal + $i;
+
+            if ($i < $umur) {
+                $penyusutan = $depresiasi;
+                $akumulasi += $penyusutan;
+                $nilai_buku = max($harga - $akumulasi, $sisa);
+            } else {
+                $penyusutan = 0;
+                $akumulasi = $harga - $sisa;
+                $nilai_buku = $sisa;
+            }
+
+            Depresiasi::updateOrCreate(
+                ['mesin_id' => $mesin->id, 'tahun' => $tahun],
+                [
+                    'kode_perhitungan' => $kode,
+                    'dibuat_oleh' => $userId,
+                    'tanggal_generate' => now(),
+                    'penyusutan' => $penyusutan,
+                    'akumulasi_penyusutan' => $akumulasi,
+                    'nilai_buku' => $nilai_buku,
+                ]
+            );
+        }
+    }
+
+    public function show($id)
+    {
+        $mesin = Mesin::findOrFail($id);
+        $depresiasi = Depresiasi::where('mesin_id', $id)->orderBy('tahun', 'ASC')->get();
+
+        return view('pages.depresiasi.detail', compact('mesin', 'depresiasi'));
+    }
 
     public function grafik(Request $request)
     {
@@ -100,7 +139,6 @@ foreach ($mesins as $mesin) {
                 $mesinNama = $item->mesin->nama_mesin;
                 $harga_beli = (float) $item->mesin->harga_beli;
                 $nilai_sisa = (float) $item->mesin->nilai_sisa;
-                $umur_ekonomis = (int) $item->mesin->umur_ekonomis;
                 $penyusutan = (float) $item->penyusutan;
 
                 if (!isset($data[$mesinNama])) {
@@ -125,67 +163,24 @@ foreach ($mesins as $mesin) {
         return view('pages.depresiasi.grafik', compact('mesins', 'mesinid', 'tahun', 'nilaiBukuData'));
     }
 
-    public function show($id)
-    {
-        $mesin = Mesin::findOrFail($id);
-        $depresiasi = Depresiasi::where('mesin_id', $id)->orderBy('tahun', 'ASC')->get();
-
-        return view('pages.depresiasi.detail', compact('mesin', 'depresiasi'));
-    }
-
-    public function reset()
-    {
-        Depresiasi::truncate();
-        $mesins = Mesin::all();
-
-        foreach ($mesins as $mesin) {
-            $harga_beli = is_numeric($mesin->harga_beli) ? (float) $mesin->harga_beli : 0;
-            $nilai_sisa = is_numeric($mesin->nilai_sisa) ? (float) $mesin->nilai_sisa : 0;
-            $umur_ekonomis = is_numeric($mesin->umur_ekonomis) ? (int) $mesin->umur_ekonomis : 0;
-
-            $depresiasi_tahunan = ($umur_ekonomis > 0) ? ($harga_beli - $nilai_sisa) / $umur_ekonomis : 0;
-
-$tahun_sekarang = now()->year;
-$tahun_akhir = max($mesin->tahun_pembelian + $umur_ekonomis - 1, $tahun_sekarang);
-$akumulasi = 0;
-
-for ($i = 0; $i <= ($tahun_akhir - $mesin->tahun_pembelian); $i++) {
-    $tahun = $mesin->tahun_pembelian + $i;
-
-    if ($i < $umur_ekonomis) {
-        $penyusutan = $depresiasi_tahunan;
-        $akumulasi += $penyusutan;
-        $nilai_buku = max($harga_beli - $akumulasi, $nilai_sisa);
-    } else {
-        $penyusutan = 0;
-        $akumulasi = $harga_beli - $nilai_sisa;
-        $nilai_buku = $nilai_sisa;
-    }
-
-    Depresiasi::create([
-        'mesin_id' => $mesin->id,
-        'tahun' => $tahun,
-        'penyusutan' => $penyusutan,
-        'akumulasi_penyusutan' => $akumulasi,
-        'nilai_buku' => $nilai_buku,
-    ]);
-}
-
-        }
-
-        return redirect()->route('depresiasi.index')->with('success', 'Data depresiasi berhasil dihitung ulang.');
-    }
-
     public function exportExcel()
     {
-    return Excel::download(new DepresiasiExport, 'depresiasi.xlsx');
+        return Excel::download(new DepresiasiExport, 'depresiasi.xlsx');
     }
 
     public function exportPdf()
     {
-    $mesins = Mesin::with('depresiasi')->get();
+        $mesins = Mesin::with('depresiasi')->get();
 
-    $pdf = PDF::loadView('pages.depresiasi.pdf', compact('mesins'));
-    return $pdf->download('laporan_depresiasi.pdf');
+        foreach ($mesins as $mesin) {
+            $harga_beli = (float) $mesin->harga_beli;
+            $nilai_sisa = (float) $mesin->nilai_sisa;
+            $umur_ekonomis = (int) $mesin->umur_ekonomis;
+            $mesin->depresiasi_tahunan = ($umur_ekonomis > 0) ? ($harga_beli - $nilai_sisa) / $umur_ekonomis : 0;
+        }
+
+        $pdf = PDF::loadView('pages.depresiasi.pdf', compact('mesins'))
+                    ->setPaper('a4', 'landscape');
+        return $pdf->stream('Data_Penyusutan_Mesin_' . date('d-m-Y') . '.pdf');
     }
 }

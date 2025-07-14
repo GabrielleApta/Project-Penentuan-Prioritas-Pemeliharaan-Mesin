@@ -13,7 +13,8 @@ use App\Http\Controllers\{
     PenilaianMesinController,
     PrioritasController,
     ProfileController,
-    UserController
+    UserController,
+    JadwalPemeliharaanController
 };
 
 // 🔒 Redirect root ke login
@@ -60,9 +61,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/hitung', [DepresiasiController::class, 'hitung'])->name('hitung');
         Route::get('/reset', [DepresiasiController::class, 'reset'])->name('reset');
         Route::get('/grafik', [DepresiasiController::class, 'grafik'])->name('grafik');
-        Route::get('/{mesin_id}', [DepresiasiController::class, 'show'])->name('show');
         Route::get('/export-excel', [DepresiasiController::class, 'exportExcel'])->name('exportExcel');
         Route::get('/export-pdf', [DepresiasiController::class, 'exportPdf'])->name('exportPdf');
+        Route::get('/{mesin_id}', [DepresiasiController::class, 'show'])->name('show');
     });
 
     // 🔥 Prioritas SAW
@@ -78,7 +79,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // 📊 Kriteria
-    Route::resource('kriteria', KriteriaController::class)->except(['show']);
+    Route::resource('kriteria', KriteriaController::class)
+    ->parameters(['kriteria' => 'kriteria']) // 💡 tambahkan baris ini
+    ->except(['show']);
 
     // 📝 Penilaian Mesin
     Route::prefix('penilaian')->name('penilaian.')->group(function () {
@@ -101,6 +104,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('kerusakan-tahunan/export-excel', [KerusakanTahunanController::class, 'exportExcel'])->name('kerusakan-tahunan.exportExcel');
     Route::get('kerusakan-tahunan/export-pdf', [KerusakanTahunanController::class, 'exportPDF'])->name('kerusakan-tahunan.pdf');
     Route::post('/kerusakan-tahunan/export-pdf-filter', [KerusakanTahunanController::class, 'exportPdfFiltered'])->name('kerusakan-tahunan.exportPdfFiltered');
+
+    Route::prefix('jadwal')->group(function () {
+    Route::get('/', [JadwalPemeliharaanController::class, 'index'])->name('jadwal.index');
+    Route::get('/create', [JadwalPemeliharaanController::class, 'create'])->name('jadwal.create');
+    Route::post('/', [JadwalPemeliharaanController::class, 'store'])->name('jadwal.store');
+    Route::get('/generate/saw', [JadwalPemeliharaanController::class, 'generateDariSAW'])->name('jadwal.generate.saw');
+
+});
 
 
     // 📑 Laporan

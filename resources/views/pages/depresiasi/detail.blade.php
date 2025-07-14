@@ -16,6 +16,10 @@
         </div>
     </div>
 
+    @php
+        $tahun_akhir = $mesin->tahun_pembelian + $mesin->umur_ekonomis - 1;
+    @endphp
+
     <!-- Tabel Depresiasi -->
     <div class="card">
         <div class="card-header">Detail Depresiasi per Tahun</div>
@@ -32,11 +36,30 @@
                     </thead>
                     <tbody>
                         @foreach ($depresiasi as $row)
+                            @php
+                                $isLuarUmur = $row->tahun > $tahun_akhir;
+                                $style = $isLuarUmur ? 'background-color: #FF0000; padding: 2px 6px; border-radius: 4px;' : '';
+                            @endphp
                             <tr>
                                 <td>{{ $row->tahun }}</td>
-                                <td>Rp. {{ number_format($row->penyusutan, 0, ',', '.') }}</td>
-                                <td>Rp. {{ number_format($row->akumulasi_penyusutan, 0, ',', '.') }}</td>
-                                <td>Rp. {{ number_format($row->nilai_buku, 0, ',', '.') }}</td>
+
+                                <td>
+                                    <span style="{{ $style }}">
+                                        Rp. {{ number_format($row->penyusutan, 0, ',', '.') }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span style="{{ $style }}">
+                                        Rp. {{ number_format($row->akumulasi_penyusutan, 0, ',', '.') }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span style="{{ $style }}">
+                                        Rp. {{ number_format($row->nilai_buku, 0, ',', '.') }}
+                                    </span>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

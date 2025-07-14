@@ -281,6 +281,7 @@
         $(document).ready(function () {
             $('#dataTable').DataTable({
                 responsive: true,
+                 scrollX: true,
                 language: {
                     search: "Cari:",
                     lengthMenu: "Tampilkan _MENU_ data per halaman",

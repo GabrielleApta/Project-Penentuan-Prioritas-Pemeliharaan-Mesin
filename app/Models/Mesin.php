@@ -52,6 +52,12 @@ class Mesin extends Model
         return $this->hasMany(Depresiasi::class);
     }
 
+    // Relasi ke tabel jadwal_pemeliharaan
+    public function jadwalPemeliharaan()
+    {
+    return $this->hasMany(JadwalPemeliharaan::class);
+    }
+
     // Relasi ke tabel kategori_mesin
     public function kategori()
     {

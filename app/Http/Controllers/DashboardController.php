@@ -9,61 +9,62 @@ use App\Models\HasilSaw;
 
 class DashboardController extends Controller
 {
-    public function index()
-    {
-        // ====================== TOTAL MESIN ======================
-        $totalMesin = Mesin::count();
-        $mesinSamjin = Mesin::where('nama_mesin', 'LIKE', '%Samjin%')->count();
-        $mesinTwisting = Mesin::where('nama_mesin', 'LIKE', '%Twisting%')->count();
-        $mesinAktif = Mesin::where('status', 'aktif')->count();
-        $mesinTidakAktif = Mesin::where('status', 'tidakaktif')->count();
+   public function index()
+{
+    // ====================== CARD STATISTIK ======================
+    $totalMesin = Mesin::count();
+    $mesinSamjin = Mesin::where('nama_mesin', 'LIKE', '%Samjin%')->count();
+    $mesinTwisting = Mesin::where('nama_mesin', 'LIKE', '%Twisting%')->count();
+    $mesinAktif = Mesin::where('status', 'aktif')->count();
+    $mesinTidakAktif = Mesin::where('status', 'tidakaktif')->count();
 
-        // ====================== GRAFIK DEPRESIASI ======================
-        $tahunAwal = Mesin::min('tahun_pembelian') ?? date('Y');
-        $tahunSekarang = date('Y');
-        $tahun = range($tahunAwal, $tahunSekarang);
+    // ====================== GRAFIK DEPRESIASI PER TAHUN ======================
+    $tahunAwal = Mesin::min('tahun_pembelian') ?? date('Y');
+    $tahunSekarang = date('Y');
+    $tahun = range($tahunAwal, $tahunSekarang);
 
-        $depresiasiData = Depresiasi::with('mesin')
-            ->whereIn('tahun', $tahun)
-            ->orderBy('tahun', 'ASC')
-            ->get()
-            ->groupBy(fn($d) => $d->mesin->nama_mesin ?? 'Tidak Diketahui');
+    $nilaiBukuPerTahun = [];
 
-        $nilaiBuku = [];
-
-        foreach ($depresiasiData as $namaMesin => $data) {
-            $dataPerTahun = collect($tahun)->map(function ($th) use ($data) {
-                return optional($data->firstWhere('tahun', $th))->nilai_buku ?? null;
-            })->toArray();
-
-            $warna = $this->generateColor($namaMesin);
-
-            $nilaiBuku[] = [
-                'label' => $namaMesin,
-                'data' => $dataPerTahun,
-                'borderColor' => $warna,
-                'backgroundColor' => $warna,
-                'fill' => false,
-            ];
-        }
-
-        // ====================== GRAFIK SAW ======================
-        $hasilSaw = HasilSaw::with('mesin')
-            ->orderByDesc('skor_akhir')
+    foreach ($tahun as $th) {
+        $topMesin = Depresiasi::with('mesin')
+            ->where('tahun', $th)
+            ->orderByDesc('nilai_buku')
             ->take(5)
             ->get();
 
-        $labelsSaw = $hasilSaw->pluck('mesin.nama_mesin')->toArray();
-        $dataSaw = $hasilSaw->pluck('skor_akhir')->toArray();
+        $datasets = [];
+        foreach ($topMesin as $row) {
+            $nama = $row->mesin->nama_mesin ?? 'Tidak Diketahui';
+            $warna = $this->generateColor($nama);
 
-        // ====================== KIRIM KE VIEW ======================
-        return view('dashboard.index', compact(
-            'totalMesin', 'mesinSamjin', 'mesinTwisting', 'mesinAktif', 'mesinTidakAktif',
-            'tahun', 'nilaiBuku', 'labelsSaw', 'dataSaw'
-        ));
+            $datasets[] = [
+                'label' => $nama,
+                'data' => [$row->nilai_buku],
+                'backgroundColor' => $warna,
+                'borderColor' => $warna,
+            ];
+        }
+
+        $nilaiBukuPerTahun[$th] = $datasets;
     }
 
-    // ====================== WARNA KONSISTEN DARI NAMA MESIN ======================
+    // ====================== GRAFIK SAW ======================
+    $hasilSaw = HasilSaw::with('mesin')
+        ->orderByDesc('skor_akhir')
+        ->take(5)
+        ->get();
+
+    $labelsSaw = $hasilSaw->pluck('mesin.nama_mesin')->toArray();
+    $dataSaw = $hasilSaw->pluck('skor_akhir')->toArray();
+
+    // ====================== KIRIM KE VIEW ======================
+    return view('dashboard.index', compact(
+        'totalMesin', 'mesinSamjin', 'mesinTwisting', 'mesinAktif', 'mesinTidakAktif',
+        'tahun', 'nilaiBukuPerTahun', 'labelsSaw', 'dataSaw'
+    ));
+}
+
+    // ====================== GENERATE WARNA DARI NAMA MESIN ======================
     private function generateColor($nama)
     {
         $hash = crc32($nama);
