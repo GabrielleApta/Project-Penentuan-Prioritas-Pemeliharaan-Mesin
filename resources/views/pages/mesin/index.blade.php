@@ -26,31 +26,31 @@
     <div class="card mb-4 shadow">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Data Mesin</div>
+            <div>
+                @if(auth()->user()->role === 'admin')
+                <a href="{{ route('mesin.create') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Tambah Data
+                </a>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#importMesinModal">
+                    <i class="fas fa-file-import"></i> Import Data
+                </button>
+                @endif
+                <a href="{{ route('mesin.exportExcel') }}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </a>
+                <a href="{{ route('mesin.mesin_pdf') }}" class="btn btn-outline-danger btn-sm" target="_blank">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </a>
+            </div>
         </div>
 
         <div class="card-body">
-            @if(auth()->user()->role === 'admin')
-                <a href="{{ route('mesin.create') }}" class="btn btn-primary mb-3">
-                    <i class="fas fa-plus"></i> Tambah Data
-                </a>
-
-                <button type="button" class="btn btn-outline-secondary mb-3" data-bs-toggle="modal" data-bs-target="#importMesinModal">
-                    <i class="fas fa-file-import"></i> Import Data
-                </button>
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        </div>
             @endif
-
-            <a href="{{ route('mesin.exportExcel') }}" class="btn btn-outline-success mb-3">
-                <i class="fas fa-file-excel"></i> Export Excel
-            </a>
-
-            <a href="{{ route('mesin.mesin_pdf') }}" class="btn btn-outline-danger mb-3" target="_blank">
-                <i class="fas fa-file-pdf"></i> Export PDF
-            </a>
-
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-
             <div class="table-responsive">
                 <table id="dataTable" class="table table-striped table-bordered text-center align-middle" style="width:100%">
                     <thead class="thead-dark text-nowrap">

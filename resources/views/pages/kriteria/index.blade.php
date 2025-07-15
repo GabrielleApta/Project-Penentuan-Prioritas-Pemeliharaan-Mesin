@@ -13,17 +13,21 @@
     <div class="card shadow mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Data Kriteria</div>
-        </div>
-
-        <div class="card-body">
+        <div>
             @if(auth()->user()->role === 'admin')
-                <a href="{{ route('kriteria.create') }}" class="btn btn-primary mb-3">
+                <a href="{{ route('kriteria.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Tambah Data
                 </a>
             @endif
+        </div>
+        </div>
 
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="card-body">
+           @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        </div>
             @endif
 
             <div class="table-responsive">

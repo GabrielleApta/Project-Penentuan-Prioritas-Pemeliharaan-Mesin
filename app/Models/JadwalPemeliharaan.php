@@ -13,11 +13,13 @@ class JadwalPemeliharaan extends Model
 
     protected $fillable = [
         'mesin_id',
+        'periode',
         'tanggal_jadwal',
         'prioritas',
         'catatan',
         'status',
         'tanggal_selesai',
+        'status'
     ];
 
     public function mesin()

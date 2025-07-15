@@ -110,6 +110,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/create', [JadwalPemeliharaanController::class, 'create'])->name('jadwal.create');
     Route::post('/', [JadwalPemeliharaanController::class, 'store'])->name('jadwal.store');
     Route::get('/generate/saw', [JadwalPemeliharaanController::class, 'generateDariSAW'])->name('jadwal.generate.saw');
+    Route::patch('/jadwal/{id}/status', [JadwalPemeliharaanController::class, 'updateStatus'])->name('jadwal.updateStatus');
+    Route::get('/jadwal/export-pdf', [JadwalPemeliharaanController::class, 'cetakJadwalPDF'])->name('jadwal.printPDF');
 
 });
 

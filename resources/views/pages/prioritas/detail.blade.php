@@ -43,6 +43,7 @@
             @endphp
 
             @foreach ($data as $key => $nilai)
+            @continue($key === 'mesin_id')
                 <tr>
                     <td>{{ $labels[$key] }}</td>
                     <td>{{ number_format($nilai, 2) }}</td>

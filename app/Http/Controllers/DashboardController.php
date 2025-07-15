@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Mesin;
 use App\Models\Depresiasi;
-use App\Models\HasilSaw;
+use App\Models\Prioritas;
 
 class DashboardController extends Controller
 {
@@ -49,7 +49,7 @@ class DashboardController extends Controller
     }
 
     // ====================== GRAFIK SAW ======================
-    $hasilSaw = HasilSaw::with('mesin')
+    $hasilSaw = Prioritas::with('mesin')
         ->orderByDesc('skor_akhir')
         ->take(5)
         ->get();

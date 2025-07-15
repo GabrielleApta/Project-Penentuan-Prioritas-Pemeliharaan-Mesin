@@ -19,6 +19,6 @@ class Prioritas extends Model
 
     public function mesin()
     {
-        return $this->belongsTo(Mesin::class, 'mesin_id');
+        return $this->belongsTo(Mesin::class);
     }
 }

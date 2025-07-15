@@ -25,26 +25,28 @@
     <div class="card mb-4 shadow">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Perhitungan Penyusutan Mesin</div>
-        </div>
-
-        <div class="card-body">
+        <div>
             @if(auth()->user()->role === 'admin')
-                <a href="{{ route('depresiasi.reset') }}" class="btn btn-primary mb-3"
+                <a href="{{ route('depresiasi.reset') }}" class="btn btn-primary btn-sm"
                     onclick="return confirm('Yakin ingin mereset semua data depresiasi?')">
                     <i class="fas fa-sync-alt"></i> Hitung Ulang
                 </a>
-
-                <a href="{{ route('depresiasi.exportExcel') }}" class="btn btn-outline-success mb-3">
+                <a href="{{ route('depresiasi.exportExcel') }}" class="btn btn-outline-success btn-sm">
                     <i class="fas fa-file-excel"></i> Export Excel
                 </a>
             @endif
-
-            <a href="{{ route('depresiasi.exportPdf') }}" class="btn btn-outline-danger mb-3" target="_blank">
+            <a href="{{ route('depresiasi.exportPdf') }}" class="btn btn-outline-danger btn-sm" target="_blank">
                 <i class="fas fa-file-pdf"></i> Export PDF
             </a>
+        </div>
+    </div>
 
+        <div class="card-body">
             @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        </div>
             @endif
 
             <div class="table-responsive">

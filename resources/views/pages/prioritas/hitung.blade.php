@@ -5,50 +5,55 @@
 @section('content')
 <div class="container-fluid">
     <h1 class="mt-4">Hasil Perhitungan SAW</h1>
+
     <div class="card mb-4">
         <div class="card-body">
-            <h4>Normalisasi</h4>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Nama Mesin</th>
-                        @foreach ($kriteria as $k)
-                            <th>{{ $k->nama_kriteria }}</th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($mesin as $m)
+            <h4 class="mb-3">Normalisasi Nilai</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="thead-dark">
                         <tr>
-                            <td>{{ $m->nama_mesin }}</td>
+                            <th>Nama Mesin</th>
                             @foreach ($kriteria as $k)
-                                <td>{{ number_format($normalisasi[$m->id][$k->nama_kriteria], 3) }}</td>
+                                <th>{{ ucwords(str_replace('_', ' ', $k->nama_kriteria)) }}</th>
                             @endforeach
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach ($mesin as $m)
+                            <tr>
+                                <td>{{ $m->nama_mesin }}</td>
+                                @foreach ($kriteria as $k)
+                                    <td>{{ number_format($normalisasi[$m->id][$k->nama_kriteria] ?? 0, 4) }}</td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
 
-            <h4>Hasil Akhir</h4>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Nama Mesin</th>
-                        <th>Skor Akhir</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php $rank = 1; @endphp
-                    @foreach ($skorAkhir as $mesin_id => $skor)
+            <h4 class="mt-5">Hasil Akhir Perhitungan</h4>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="thead-dark">
                         <tr>
-                            <td>{{ $rank++ }}</td>
-                            <td>{{ $mesin->find($mesin_id)->nama_mesin }}</td>
-                            <td>{{ number_format($skor, 3) }}</td>
+                            <th>Rangking</th>
+                            <th>Nama Mesin</th>
+                            <th>Skor Akhir</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @php $rank = 1; @endphp
+                        @foreach ($skorAkhir as $mesin_id => $skor)
+                            <tr>
+                                <td>{{ $rank++ }}</td>
+                                <td>{{ $mesin->find($mesin_id)?->nama_mesin ?? 'Tidak ditemukan' }}</td>
+                                <td>{{ number_format($skor, 4) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

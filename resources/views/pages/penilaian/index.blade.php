@@ -25,32 +25,28 @@
     <div class="card mb-4 shadow">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Penilaian Mesin</div>
-        </div>
-
-        <div class="card-body">
-            {{-- Tombol Aksi untuk Admin --}}
+        <div>
             @if(auth()->user()->role === 'admin')
-<div class="mb-3 d-flex flex-wrap gap-2">
-    <form action="{{ route('penilaian.generate') }}" method="POST" class="d-inline">
+            <form action="{{ route('penilaian.generate') }}" method="POST" class="d-inline">
         @csrf
-        <button type="submit" class="btn btn-primary"
+        <button type="submit" class="btn btn-primary btn-sm"
             onclick="return confirm('Yakin ingin generate ulang data penilaian mesin?\nData lama akan diperbarui.')">
             <i class="fas fa-sync-alt me-1"></i> Generate Penilaian
         </button>
     </form>
-
-    <a href="{{ route('penilaian.normalisasi') }}" class="btn btn-outline-success">
+            @endif
+            <a href="{{ route('penilaian.normalisasi') }}" class="btn btn-outline-success btn-sm">
         <i class="fas fa-table me-1"></i> Lihat Hasil Normalisasi (SAW)
     </a>
 
-    <a href="{{ route('penilaian.exportExcel') }}" class="btn btn-outline-secondary">
+    <a href="{{ route('penilaian.exportExcel') }}" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-file-excel me-1"></i> Export ke Excel
     </a>
-</div>
+        </div>
+        </div>
 
-            @endif
+        <div class="card-body">
 
-            {{-- Alert sukses --}}
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
