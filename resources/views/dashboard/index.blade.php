@@ -41,7 +41,7 @@
                         <i class="fas fa-chart-line"></i> Nilai Buku Mesin per Tahun
                     </h6>
                     <select id="filterTahun" class="form-control form-control-sm w-auto">
-                        @foreach ($tahun as $th)
+                        @foreach ($listTahun as $th)
                             <option value="{{ $th }}">{{ $th }}</option>
                         @endforeach
                     </select>

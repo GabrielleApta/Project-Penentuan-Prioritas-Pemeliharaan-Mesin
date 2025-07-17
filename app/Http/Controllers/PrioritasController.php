@@ -181,4 +181,6 @@ class PrioritasController extends Controller
 
         return $result;
     }
+
+    
 }
