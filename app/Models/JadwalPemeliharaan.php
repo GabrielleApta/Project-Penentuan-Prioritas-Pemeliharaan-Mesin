@@ -26,4 +26,9 @@ class JadwalPemeliharaan extends Model
     {
         return $this->belongsTo(Mesin::class);
     }
+
+    public function history()
+    {
+        return $this->hasOne(HistoryPemeliharaan::class);
+    }
 }

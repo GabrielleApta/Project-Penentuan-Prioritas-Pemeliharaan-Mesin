@@ -52,7 +52,7 @@
 
                 <a class="nav-link {{ request()->routeIs('prioritas.index') ? 'active' : '' }}"
                            href="{{ route('prioritas.index') }}" title="Hasil SAW">
-                            <i class="fas fa-chart-line me-2"></i> Hasil SAW
+                            <i class="fas fa-chart-line me-2"></i> Ranking Prioritas Pemeliharaan Mesin
                         </a>
 
                 <!-- Data Kriteria dan Bobot -->
@@ -63,25 +63,7 @@
                     </nav>
                 </div>
 
-                <!-- Penentuan Prioritas Pemeliharaan -->
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePrioritas" aria-expanded="false" aria-controls="collapsePrioritas">
-                    <div class="sb-nav-link-icon"><i class="fas fa-columns me-2"></i></div>
-                    Penentuan Prioritas Pemeliharaan
-                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                </a>
-
-                <div class="collapse" id="collapsePrioritas">
-                    <nav class="sb-sidenav-menu-nested nav">
-                        <a class="nav-link {{ request()->routeIs('penilaian.index') ? 'active' : '' }}"
-                           href="{{ route('penilaian.index') }}" title="Penilaian Mesin">
-                            <i class="fas fa-table me-2"></i> Data Penilaian Mesin
-                        </a>
-                    </nav>
-                </div>
-                <a class="nav-link {{ request()->routeIs('jadwal.index') ? 'active' : '' }}"
-                           href="{{ route('jadwal.index') }}" title="Jadwal Pemeliharaan">
-                            <i class="fas fa-table me-2"></i> Jadwal Pemeliharaan
-                        </a>
+                
 
                 <!-- Kelola User (Admin Only) -->
                 @if(Auth::check() && Auth::user()->role === 'admin')

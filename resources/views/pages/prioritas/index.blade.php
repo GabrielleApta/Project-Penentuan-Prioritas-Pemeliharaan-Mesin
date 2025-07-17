@@ -28,14 +28,17 @@
             <div>
                 @if(auth()->user()->role === 'admin')
                     <a href="{{ route('prioritas.hitung') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-calculator"></i> Hitung Ulang SAW
+                        <i class="fas fa-calculator"></i> Hitung Ulang
                     </a>
-                    <a href="{{ route('prioritas.export') }}" class="btn btn-success btn-sm">
-                        <i class="fas fa-file-excel"></i> Export Excel
+                    <a href="{{ route('penilaian.index') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-table me-1"></i> Penilaian Mesin
+                    </a>
+                    <a href="{{ route('jadwal.index') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-table me-1"></i> Jadwal Pemeliharaan
                     </a>
                 @endif
                 <a href="{{ route('prioritas.printPDF') }}" class="btn btn-danger btn-sm" target="_blank">
-                    <i class="fas fa-file-pdf"></i> Export PDF
+                    <i class="fas fa-file-pdf"></i> Riwayat Perhitungan
                 </a>
         </div>
         </div>

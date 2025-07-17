@@ -64,6 +64,12 @@ class Mesin extends Model
         return $this->belongsTo(KategoriMesin::class, 'kategori_id', 'id');
     }
 
+    //Relasi ke tabel histori pemeliharaan
+    public function historyPemeliharaan()
+    {
+        return $this->hasMany(HistoryPemeliharaan::class);
+    }
+
     // Menghapus data terkait di penilaian_mesin saat mesin dihapus
     protected static function boot()
     {

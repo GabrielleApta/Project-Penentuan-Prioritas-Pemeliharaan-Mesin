@@ -103,7 +103,6 @@ private function tentukanPrioritas($skor)
     }
 }
 
-
 public function updateStatus(Request $request, $id)
 {
     $request->validate([

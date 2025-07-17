@@ -14,7 +14,8 @@ use App\Http\Controllers\{
     PrioritasController,
     ProfileController,
     UserController,
-    JadwalPemeliharaanController
+    JadwalPemeliharaanController,
+    HistoryPemeliharaanController,
 };
 
 // 🔒 Redirect root ke login
@@ -114,6 +115,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/jadwal/export-pdf', [JadwalPemeliharaanController::class, 'cetakJadwalPDF'])->name('jadwal.printPDF');
 
 });
+
+
+Route::resource('history-pemeliharaan', HistoryPemeliharaanController::class);
 
 
     // 📑 Laporan

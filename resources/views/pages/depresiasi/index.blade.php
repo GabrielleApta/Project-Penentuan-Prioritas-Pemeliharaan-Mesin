@@ -32,7 +32,7 @@
                     <i class="fas fa-sync-alt"></i> Hitung Ulang
                 </a>
                 <a href="{{ route('depresiasi.exportExcel') }}" class="btn btn-outline-success btn-sm">
-                    <i class="fas fa-file-excel"></i> Export Excel
+                    <i class="fas fa-file-excel"></i> Riwayat Perhitungan (blm ganti route)
                 </a>
             @endif
             <a href="{{ route('depresiasi.exportPdf') }}" class="btn btn-outline-danger btn-sm" target="_blank">

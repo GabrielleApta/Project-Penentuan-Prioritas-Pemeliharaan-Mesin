@@ -7,6 +7,7 @@
     <h1 class="mt-4">Data Penilaian Mesin</h1>
     <ol class="breadcrumb mb-4">
         <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('prioritas.index') }}">Prioritas Pemeliharaan</a></li>
         <li class="breadcrumb-item active"> Tabel Skor Mesin</li>
     </ol>
 
@@ -37,10 +38,6 @@
             @endif
             <a href="{{ route('penilaian.normalisasi') }}" class="btn btn-outline-success btn-sm">
         <i class="fas fa-table me-1"></i> Lihat Hasil Normalisasi (SAW)
-    </a>
-
-    <a href="{{ route('penilaian.exportExcel') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-file-excel me-1"></i> Export ke Excel
     </a>
         </div>
         </div>

@@ -62,42 +62,42 @@
                             <th class="text-center">Spesifikasi Mesin</th>
                             <th class="text-center">Daya Motor</th>
                             <th class="text-center">Lokasi Mesin</th>
-
-                            @if(auth()->user()->role === 'admin')
-                                <th class="text-center">Aksi</th>
-                            @endif
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($mesin as $index => $m)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td class="text-start">{{ $m->nama_mesin }}</td>
-                                <td>{{ $m->kode_mesin }}</td>
-                                <td>{{ $m->tahun_pembelian }}</td>
-                                <td class="text-start">{{ $m->spesifikasi_mesin }}</td>
-                                <td>
-                                    {{ (fmod($m->daya_motor, 1) != 0) ? str_replace('.', ',', rtrim($m->daya_motor, '0')) : (int) $m->daya_motor }} KW
-                                </td>
-                                <td>{{ $m->lokasi_mesin }}</td>
-                                @if(auth()->user()->role === 'admin')
-                                    <td class="text-nowrap" >
-                                        <div class="d-flex gap-2">
-                                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditMesin{{ $m->id }}">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button>
-                                            <form action="{{ route('mesin.destroy', $m->id) }}" method="POST" class="formHapusMesin d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm btnHapusMesin">
-                                                    <i class="fas fa-trash-alt"></i> Hapus
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                @endif
+<tr>
+    <td>{{ $index + 1 }}</td>
+    <td class="text-start">{{ $m->nama_mesin }}</td>
+    <td>{{ $m->kode_mesin }}</td>
+    <td>{{ $m->tahun_pembelian }}</td>
+    <td class="text-nowrap">{{ $m->spesifikasi_mesin }}</td>
+    <td>
+        {{ (fmod($m->daya_motor, 1) != 0) ? str_replace('.', ',', rtrim($m->daya_motor, '0')) : (int) $m->daya_motor }} KW
+    </td>
+    <td>{{ $m->lokasi_mesin }}</td>
 
-                            </tr>
+    <td class="text-nowrap">
+    @if(auth()->user()->role === 'admin')
+    <div class="d-flex gap-2">
+        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditMesin{{ $m->id }}">
+            <i class="fas fa-edit"></i> Edit
+        </button>
+        <form action="{{ route('mesin.destroy', $m->id) }}" method="POST" class="formHapusMesin d-inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger btn-sm btnHapusMesin">
+                <i class="fas fa-trash-alt"></i> Hapus
+            </button>
+        </form>
+    </div>
+    @else
+        <span class="text-muted">-</span>
+    @endif
+</td>
+</tr>
+
 
                             {{-- Modal Edit Mesin --}}
                             <div class="modal fade" id="modalEditMesin{{ $m->id }}" tabindex="-1" aria-labelledby="editMesinLabel{{ $m->id }}" aria-hidden="true">
@@ -172,10 +172,11 @@
                         @endforeach
 
                         @if ($mesin->isEmpty())
-                            <tr>
-                                <td colspan="8" class="text-center">Tidak ada data mesin.</td>
-                            </tr>
-                        @endif
+    <tr>
+        <td colspan="8" class="text-center">Tidak ada data mesin.</td>
+
+    </tr>
+@endif
                     </tbody>
                 </table>
             </div>

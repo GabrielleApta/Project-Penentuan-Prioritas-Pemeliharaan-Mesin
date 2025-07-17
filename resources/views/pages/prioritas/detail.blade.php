@@ -65,8 +65,6 @@
     <div class="mt-3">
         <a href="{{ route('prioritas.index') }}" class="btn btn-primary mb-3">
             <i class="fas fa-arrow-left"></i> Kembali</a>
-        <a href="{{ route('prioritas.exportDetail', $mesin->id) }}" class="btn btn-success mb-3">
-            <i class="fas fa-file-excel"></i> Export Excel</a>
         <a href="{{ route('prioritas.detailPDF', $mesin->id) }}" class="btn btn-danger mb-3" target="_blank">
             <i class="fas fa-file-pdf"></i> Print PDF</a>
     </div>
