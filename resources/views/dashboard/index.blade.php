@@ -1,9 +1,7 @@
-
 @extends('layouts.app')
 
 @section('content')
 <div class="container-fluid">
-    <!-- Page Heading -->
     <h1 class="h3 mb-4 text-gray-800">Dashboard</h1>
 
     <!-- Card Statistik Mesin -->
@@ -31,26 +29,21 @@
         @endforeach
     </div>
 
-    <!-- Grafik Depresiasi dan SAW Berdampingan -->
+    <!-- Grafik Bubble Depresiasi dan SAW -->
     <div class="row">
-        <!-- Grafik Depresiasi -->
+        <!-- Grafik Bubble Depresiasi -->
         <div class="col-lg-6 mb-4">
             <div class="card shadow h-100">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-chart-line"></i> Nilai Buku Mesin per Tahun
+                        <i class="fas fa-chart-bubble"></i> Grafik Bubble Penyusutan Mesin
                     </h6>
-                    <select id="filterTahun" class="form-control form-control-sm w-auto">
-                        @foreach ($listTahun as $th)
-                            <option value="{{ $th }}">{{ $th }}</option>
-                        @endforeach
-                    </select>
                 </div>
                 <div class="card-body">
                     <p class="text-muted small mb-2">
-                        Menampilkan 5 mesin dengan nilai buku tertinggi untuk tahun tertentu.
+                        Visualisasi nilai buku mesin berdasarkan tahun dan penyusutan tahunan.
                     </p>
-                    <canvas id="depresiasiChart" height="230"></canvas>
+                    <canvas id="bubbleChartDepresiasi" height="230"></canvas>
                 </div>
             </div>
         </div>
@@ -78,69 +71,64 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    // Data dari Controller
-    const tahunData = @json($nilaiBukuPerTahun ?? []);
-    const tahunSelect = document.getElementById("filterTahun");
-    const ctx = document.getElementById("depresiasiChart").getContext("2d");
+    // ========= BUBBLE CHART =========
+    const bubbleCtx = document.getElementById("bubbleChartDepresiasi").getContext("2d");
+    const bubbleRawData = @json($grafikBubbleDepresiasi);
 
-    let depresiasiChart;
+    const bubbleDatasets = bubbleRawData.map(row => ({
+        label: row.label,
+        data: [{
+            x: row.x,
+            y: row.y,
+            r: row.r
+        }],
+        backgroundColor: row.backgroundColor,
+        borderColor: row.backgroundColor,
+        borderWidth: 1
+    }));
 
-    function renderChart(tahun) {
-        const datasets = tahunData[tahun] || [];
-
-        if (depresiasiChart) depresiasiChart.destroy();
-
-        depresiasiChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: datasets.map(ds => ds.label),
-                datasets: [{
-                    label: `Nilai Buku Mesin - ${tahun}`,
-                    data: datasets.map(ds => ds.data[0]),
-                    backgroundColor: datasets.map(ds => ds.backgroundColor),
-                    borderColor: datasets.map(ds => ds.borderColor),
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: `Top 5 Nilai Buku Mesin Tahun ${tahun}`
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => `Rp ${ctx.parsed.y.toLocaleString('id-ID')}`
-                        }
-                    },
-                    legend: { display: false }
+    new Chart(bubbleCtx, {
+        type: 'bubble',
+        data: {
+            datasets: bubbleDatasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Bubble Chart - Nilai Buku dan Penyusutan Mesin'
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Nilai Buku (Rp)'
-                        },
-                        ticks: {
-                            callback: value => 'Rp ' + value.toLocaleString('id-ID')
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const x = ctx.raw.x;
+                            const y = ctx.raw.y.toLocaleString('id-ID');
+                            const r = (ctx.raw.r * 1000000).toLocaleString('id-ID');
+                            return `${ctx.dataset.label}\nTahun: ${x}, Nilai Buku: Rp ${y}, Penyusutan: Rp ${r}`;
                         }
+                    }
+                },
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Tahun' },
+                    ticks: { stepSize: 1 },
+                    beginAtZero: false
+                },
+                y: {
+                    title: { display: true, text: 'Nilai Buku (Rp)' },
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => 'Rp ' + value.toLocaleString('id-ID')
                     }
                 }
             }
-        });
-    }
-
-    // Inisialisasi grafik pertama
-    renderChart(tahunSelect.value);
-
-    // Saat dropdown berubah
-    tahunSelect.addEventListener('change', function () {
-        renderChart(this.value);
+        }
     });
 
-    // Grafik SAW (tidak berubah)
+    // ========= SAW CHART =========
     const ctxSaw = document.getElementById("hasilSawChart").getContext("2d");
     const labelsSaw = @json($labelsSaw ?? []);
     const dataSaw = @json($dataSaw ?? []);
@@ -167,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 tooltip: {
                     callbacks: {
-                        label: ctx => `Skor SAW: ${ctx.parsed.x.toFixed(2)}`
+                        label: ctx => `Skor SAW: ${ctx.parsed.x.toFixed(3)}`
                     }
                 },
                 legend: { display: false }
