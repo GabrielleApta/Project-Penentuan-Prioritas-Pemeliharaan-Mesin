@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Mesin;
 use App\Models\Depresiasi;
+use App\Models\RiwayatStraightLine;
 use App\Exports\DepresiasiExport;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
+use Carbon\Carbon;
+use DB;
 
 class DepresiasiController extends Controller
 {
@@ -18,8 +22,12 @@ class DepresiasiController extends Controller
 
     public function index(Request $request)
 {
-    $mesins = Mesin::all();
-
+    if (session('depresiasi_disimpan')) {
+        $mesins = Mesin::all();
+        $depresiasi = collect();
+    } else {
+        $mesins = Mesin::all();
+    $depresiasi = Depresiasi::whereDoesntHave('riwayat')->get();
     $tahunSekarang = now()->year;
 
     foreach ($mesins as $mesin) {
@@ -35,7 +43,8 @@ class DepresiasiController extends Controller
         $mesin->total_akumulasi = $depresiasiTahunIni->akumulasi_penyusutan ?? 0;
         $mesin->nilai_buku_akhir = $depresiasiTahunIni->nilai_buku ?? 0;
     }
-    return view('pages.depresiasi.index', compact('mesins'));
+}
+    return view('pages.depresiasi.index', compact('mesins', 'depresiasi'));
 }
 
     public function generate()
@@ -46,7 +55,7 @@ class DepresiasiController extends Controller
         foreach (Mesin::all() as $mesin) {
             $this->hitungDanSimpanDepresiasi($mesin, $kode, $userId);
         }
-
+        session()->forget('depresiasi_disimpan');
         return redirect()->route('depresiasi.index')->with('success', 'Data depresiasi berhasil dihitung.');
     }
 
@@ -60,7 +69,7 @@ class DepresiasiController extends Controller
         foreach (Mesin::all() as $mesin) {
             $this->hitungDanSimpanDepresiasi($mesin, $kode, $userId);
         }
-
+        session()->forget('depresiasi_disimpan');
         return redirect()->route('depresiasi.index')->with('success', 'Data depresiasi berhasil di-reset dan dihitung ulang.');
     }
 
@@ -183,4 +192,43 @@ class DepresiasiController extends Controller
                     ->setPaper('a4', 'landscape');
         return $pdf->stream('Data_Penyusutan_Mesin_' . date('d-m-Y') . '.pdf');
     }
+
+    public function simpanKeRiwayat()
+{
+    $data = Depresiasi::with('mesin')->get(); // eager load relasi 'mesin'
+
+    if ($data->isEmpty()) {
+        return redirect()->route('depresiasi.index')->with('error', 'Tidak ada data yang bisa disimpan.');
+    }
+
+    $kode = 'SL-' . now()->format('YmdHis');
+    $userId = auth()->id() ?? 1;
+
+    foreach ($data as $item) {
+        if (!$item->mesin) continue; // skip jika tidak ada relasi mesin
+
+        RiwayatStraightLine::create([
+            'kode_perhitungan'       => $kode,
+            'mesin_id'               => $item->mesin_id,
+            'tahun'                  => $item->tahun,
+            'nama_mesin'             => $item->nama_mesin,
+            'harga_beli'             => $item->harga_beli,
+            'nilai_sisa'             => $item->nilai_sisa,
+            'umur_ekonomis'          => $item->umur_ekonomis,
+            'usia_mesin'             => $item->usia_mesin,
+            'penyusutan'             => $item->penyusutan,
+            'akumulasi_penyusutan'   => $item->akumulasi_penyusutan,
+            'nilai_buku'             => $item->nilai_buku,
+            'dibuat_oleh'            => $userId,
+            'tanggal_generate'       => now(),
+        ]);
+    }
+
+    Depresiasi::truncate();
+
+    return redirect()->route('depresiasi.index')->with('success', 'Data berhasil disimpan ke Riwayat dan tabel Depresiasi dikosongkan.');
+}
+
+
+
 }

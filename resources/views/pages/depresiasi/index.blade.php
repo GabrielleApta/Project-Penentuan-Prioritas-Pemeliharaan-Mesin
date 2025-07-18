@@ -31,8 +31,19 @@
                     onclick="return confirm('Yakin ingin mereset semua data depresiasi?')">
                     <i class="fas fa-sync-alt"></i> Hitung Ulang
                 </a>
-                <a href="{{ route('depresiasi.exportExcel') }}" class="btn btn-outline-success btn-sm">
-                    <i class="fas fa-file-excel"></i> Riwayat Perhitungan (blm ganti route)
+
+                <form action="{{ route('depresiasi.simpan') }}" method="POST" class="d-inline">
+    @csrf
+    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Yakin ingin memindahkan data ke riwayat dan mengosongkan data sekarang?')">
+        <i class="fas fa-save"></i> Simpan ke Riwayat
+    </button>
+</form>
+
+
+
+
+                <a href="{{ route('riwayat-straight-line.index') }}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Riwayat Perhitungan
                 </a>
             @endif
             <a href="{{ route('depresiasi.exportPdf') }}" class="btn btn-outline-danger btn-sm" target="_blank">
@@ -83,7 +94,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center">Tidak ada data mesin.</td>
+                                <td colspan="10" class="text-center">Tidak ada data penyusutan mesin.</td>
                             </tr>
                         @endforelse
                     </tbody>

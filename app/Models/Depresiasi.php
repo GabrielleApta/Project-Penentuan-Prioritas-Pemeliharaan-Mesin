@@ -16,7 +16,12 @@ class Depresiasi extends Model
     ];
 
     public function mesin()
-    {
-        return $this->belongsTo(Mesin::class, 'mesin_id');
-    }
+{
+    return $this->belongsTo(Mesin::class);
+}
+
+public function riwayat()
+{
+    return $this->hasOne(RiwayatStraightLine::class, 'mesin_id');
+}
 }

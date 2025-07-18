@@ -16,6 +16,7 @@ use App\Http\Controllers\{
     UserController,
     JadwalPemeliharaanController,
     HistoryPemeliharaanController,
+    RiwayatStraightLineController,
 };
 
 // 🔒 Redirect root ke login
@@ -65,6 +66,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/export-excel', [DepresiasiController::class, 'exportExcel'])->name('exportExcel');
         Route::get('/export-pdf', [DepresiasiController::class, 'exportPdf'])->name('exportPdf');
         Route::get('/{mesin_id}', [DepresiasiController::class, 'show'])->name('show');
+        Route::post('/simpan', [DepresiasiController::class, 'simpanKeRiwayat'])->name('simpan');
+
+
     });
 
     // 🔥 Prioritas SAW
@@ -121,6 +125,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::resource('history-pemeliharaan', HistoryPemeliharaanController::class);
 
+
+Route::prefix('riwayat-straight-line')->middleware(['auth'])->group(function () {
+    Route::get('/', [RiwayatStraightLineController::class, 'index'])->name('riwayat-straight-line.index');
+    Route::get('/riwayat-straight-line/{kode_perhitungan}', [RiwayatStraightLineController::class, 'show'])->name('riwayat-straight-line.show');
+    Route::delete('/riwayat-straight-line/{kode_perhitungan}', [RiwayatStraightLineController::class, 'destroy'])->name('riwayat-straight-line.destroy');
+
+});
 
     // 📑 Laporan
     Route::prefix('laporan')->name('laporan.')->group(function () {
