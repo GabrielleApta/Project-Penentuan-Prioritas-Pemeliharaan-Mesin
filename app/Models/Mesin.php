@@ -70,6 +70,18 @@ class Mesin extends Model
         return $this->hasMany(HistoryPemeliharaan::class);
     }
 
+    //Relasi ke tabel riwayat saw
+    public function riwayatSaw()
+    {
+    return $this->hasMany(RiwayatSaw::class);
+    }
+    
+    //Relasi ke tabel riwayat saw
+    public function riwayatStraightLine()
+    {
+    return $this->hasMany(RiwayatStraightLine::class);
+    }
+
     // Menghapus data terkait di penilaian_mesin saat mesin dihapus
     protected static function boot()
     {

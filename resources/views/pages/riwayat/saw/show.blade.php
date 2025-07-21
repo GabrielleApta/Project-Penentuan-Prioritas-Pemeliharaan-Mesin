@@ -1,0 +1,64 @@
+@extends('layouts.app')
+
+@section('title', 'Detail Riwayat SAW')
+
+@section('content')
+<div class="container-fluid px-2">
+    <h1 class="mt-4">Detail Riwayat SAW</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('riwayat-saw.index') }}">Riwayat SAW</a></li>
+        <li class="breadcrumb-item active">Detail</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <strong>Kode Perhitungan:</strong> {{ $kode }} <br>
+            <strong>Tanggal Simpan:</strong> {{ $items->first()->created_at->format('d M Y') }}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">Hasil Perhitungan</div>
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="text-center">
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Mesin</th>
+                        <th>Akumulasi Penyusutan</th>
+                        <th>Usia Mesin</th>
+                        <th>Frekuensi Kerusakan</th>
+                        <th>Waktu Downtime</th>
+                        <th>Normalisasi</th>
+                        <th>Skor Akhir</th>
+                        <th>Ranking</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($items as $item)
+                        <tr class="text-center">
+                            <td>{{ $loop->iteration }}</td>
+                            <td class="text-start">{{ $item->mesin->nama_mesin }}</td>
+                            <td>{{ number_format($item->akumulasi_penyusutan, 2) }}</td>
+                            <td>{{ $item->usia_mesin }}</td>
+                            <td>{{ $item->frekuensi_kerusakan }}</td>
+                            <td>{{ $item->waktu_downtime }}</td>
+                            <td>
+                                <ul class="text-start mb-0">
+                                    <li>AP: {{ $item->normalisasi_akumulasi }}</li>
+                                    <li>UM: {{ $item->normalisasi_usia }}</li>
+                                    <li>FK: {{ $item->normalisasi_frekuensi }}</li>
+                                    <li>WD: {{ $item->normalisasi_downtime }}</li>
+                                </ul>
+                            </td>
+                            <td>{{ number_format($item->skor_akhir, 4) }}</td>
+                            <td><strong>{{ $item->ranking }}</strong></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endsection

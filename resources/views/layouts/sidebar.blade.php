@@ -62,8 +62,11 @@
                         </a>
                     </nav>
                 </div>
+<a class="nav-link {{ request()->routeIs('jadwal.index') ? 'active' : '' }}"
+                           href="{{ route('jadwal.index') }}" title="Kriteria dan Bobot">
+                            <i class="fas fa-balance-scale me-2"></i> Jadwal Pemeliharaan
+                        </a>
 
-                
 
                 <!-- Kelola User (Admin Only) -->
                 @if(Auth::check() && Auth::user()->role === 'admin')

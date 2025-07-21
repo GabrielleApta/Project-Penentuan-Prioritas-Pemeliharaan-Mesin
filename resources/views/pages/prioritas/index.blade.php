@@ -24,24 +24,31 @@
 
     <div class="card shadow mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <div><i class="fas fa-table me-1"></i> Tabel Data Ranking Prioritas Pemeliharaan Mesin</div>
-            <div>
-                @if(auth()->user()->role === 'admin')
-                    <a href="{{ route('prioritas.hitung') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-calculator"></i> Hitung Ulang
-                    </a>
-                    <a href="{{ route('penilaian.index') }}" class="btn btn-success btn-sm">
-                        <i class="fas fa-table me-1"></i> Penilaian Mesin
-                    </a>
-                    <a href="{{ route('jadwal.index') }}" class="btn btn-success btn-sm">
-                        <i class="fas fa-table me-1"></i> Jadwal Pemeliharaan
-                    </a>
-                @endif
-                <a href="{{ route('prioritas.printPDF') }}" class="btn btn-danger btn-sm" target="_blank">
-                    <i class="fas fa-file-pdf"></i> Riwayat Perhitungan
-                </a>
-        </div>
-        </div>
+    <div><i class="fas fa-table me-1"></i> Tabel Data Ranking Prioritas Pemeliharaan Mesin</div>
+    <div class="d-flex flex-wrap gap-2 justify-content-end">
+        @if(auth()->user()->role === 'admin')
+            <a href="{{ route('prioritas.hitung') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-calculator"></i> Hitung Ulang
+            </a>
+
+            <a href="{{ route('penilaian.index') }}" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-table me-1"></i> Penilaian Mesin
+            </a>
+
+            <form action="{{ route('riwayat-saw.store') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-success btn-sm"
+                    onclick="return confirm('Simpan perhitungan ini ke riwayat?')">
+                    <i class="fas fa-save"></i> Simpan ke Riwayat
+                </button>
+            </form>
+        @endif
+
+        <a href="{{ route('riwayat-saw.index') }}" class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-file-pdf"></i> Riwayat Perhitungan
+        </a>
+    </div>
+</div>
 
         <div class="card-body">
             @if(session('success'))

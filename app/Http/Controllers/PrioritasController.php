@@ -75,6 +75,26 @@ class PrioritasController extends Controller
         DB::table('hasil_saw')->truncate();
         Prioritas::insert($hasil);
 
+        // ====== Tambahan: Simpan ke tabel riwayat_saw ======
+    $kode_perhitungan = 'SAW-' . now()->format('Y') . '-' . str_pad(RiwayatSaw::count() + 1, 3, '0', STR_PAD_LEFT);
+
+    foreach ($hasil as $row) {
+        $p = $penilaian->firstWhere('mesin_id', $row['mesin_id']);
+        if (!$p) continue;
+
+        \App\Models\RiwayatSaw::create([
+            'mesin_id'             => $p->mesin->id,
+            'kode_perhitungan'     => $kode_perhitungan,
+            'nama_mesin'           => $p->mesin->nama_mesin,
+            'akumulasi_penyusutan' => $p->akumulasi_penyusutan,
+            'usia_mesin'           => $p->usia_mesin,
+            'frekuensi_kerusakan'  => $p->frekuensi_kerusakan,
+            'waktu_downtime'       => $p->waktu_downtime,
+            'skor_akhir'           => $row['skor_akhir'],
+            'ranking'              => $row['rangking'],
+        ]);
+    }
+
         return redirect()->route('prioritas.index')->with('success', 'Perhitungan SAW berhasil dilakukan.');
     }
 
@@ -162,25 +182,33 @@ class PrioritasController extends Controller
     }
 
     private function normalisasi(array $data)
-    {
-        $result = [];
+{
+    $kriteria = [
+        'akumulasi_penyusutan' => ['bobot' => 0.3, 'jenis' => 'cost'],
+        'usia_mesin'           => ['bobot' => 0.3, 'jenis' => 'cost'],
+        'frekuensi_kerusakan'  => ['bobot' => 0.2, 'jenis' => 'cost'],
+        'waktu_downtime'       => ['bobot' => 0.2, 'jenis' => 'cost'],
+    ];
 
-        foreach ($this->kriteria as $k => $meta) {
-            $values = array_column($data, $k);
-            $extreme = $meta['jenis'] === 'benefit' ? max($values) : min($values);
-            $extreme = $extreme ?: 0.0001;
+    $result = [];
 
-            foreach ($data as $i => $row) {
-                $val = $row[$k] ?: 0.0001;
-                $norm = $meta['jenis'] === 'benefit' ? $val / $extreme : $extreme / $val;
+    foreach ($kriteria as $k => $meta) {
+        $values = array_column($data, $k);
+        $extreme = $meta['jenis'] === 'benefit' ? max($values) : min($values);
+        $extreme = $extreme ?: 0.0001;
 
-                $result[$i]['mesin_id'] = $row['mesin_id'];
-                $result[$i][$k] = $norm;
-            }
+        foreach ($data as $i => $row) {
+            $val = $row[$k] ?: 0.0001;
+            $norm = $meta['jenis'] === 'benefit' ? $val / $extreme : $extreme / $val;
+
+            $result[$i]['mesin_id'] = $row['mesin_id'];
+            $result[$i][$k] = $norm;
         }
-
-        return $result;
     }
 
-    
+    return $result;
+}
+
+
+
 }

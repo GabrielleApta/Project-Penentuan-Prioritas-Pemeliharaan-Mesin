@@ -17,6 +17,7 @@ use App\Http\Controllers\{
     JadwalPemeliharaanController,
     HistoryPemeliharaanController,
     RiwayatStraightLineController,
+    RiwayatSawController,
 };
 
 // 🔒 Redirect root ke login
@@ -59,17 +60,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // 📉 Depresiasi
     Route::prefix('depresiasi')->name('depresiasi.')->group(function () {
-        Route::get('/', [DepresiasiController::class, 'index'])->name('index');
-        Route::post('/hitung', [DepresiasiController::class, 'hitung'])->name('hitung');
-        Route::get('/reset', [DepresiasiController::class, 'reset'])->name('reset');
-        Route::get('/grafik', [DepresiasiController::class, 'grafik'])->name('grafik');
-        Route::get('/export-excel', [DepresiasiController::class, 'exportExcel'])->name('exportExcel');
-        Route::get('/export-pdf', [DepresiasiController::class, 'exportPdf'])->name('exportPdf');
-        Route::get('/{mesin_id}', [DepresiasiController::class, 'show'])->name('show');
-        Route::post('/simpan', [DepresiasiController::class, 'simpanKeRiwayat'])->name('simpan');
+    Route::get('/', [DepresiasiController::class, 'index'])->name('index');
+    Route::post('/hitung', [DepresiasiController::class, 'hitung'])->name('hitung');
+    Route::post('/simpan', [DepresiasiController::class, 'simpanKeRiwayat'])->name('simpan');
+    Route::get('/reset', [DepresiasiController::class, 'reset'])->name('reset');
+    Route::get('/grafik', [DepresiasiController::class, 'grafik'])->name('grafik');
+    Route::get('/export-excel', [DepresiasiController::class, 'exportExcel'])->name('exportExcel');
+    Route::get('/export-pdf', [DepresiasiController::class, 'exportPdf'])->name('exportPdf');
+    Route::get('/{mesin_id}', [DepresiasiController::class, 'show'])->name('show');
+});
 
-
-    });
 
     // 🔥 Prioritas SAW
     Route::prefix('prioritas')->name('prioritas.')->group(function () {
@@ -126,12 +126,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::resource('history-pemeliharaan', HistoryPemeliharaanController::class);
 
 
-Route::prefix('riwayat-straight-line')->middleware(['auth'])->group(function () {
-    Route::get('/', [RiwayatStraightLineController::class, 'index'])->name('riwayat-straight-line.index');
-    Route::get('/riwayat-straight-line/{kode_perhitungan}', [RiwayatStraightLineController::class, 'show'])->name('riwayat-straight-line.show');
-    Route::delete('/riwayat-straight-line/{kode_perhitungan}', [RiwayatStraightLineController::class, 'destroy'])->name('riwayat-straight-line.destroy');
+Route::prefix('riwayat/straight-line')->name('riwayat.straight-line.')->group(function () {
+    Route::get('/', [RiwayatStraightLineController::class, 'index'])->name('index');
+    Route::post('/simpan', [RiwayatStraightLineController::class, 'simpan'])->name('simpan');
+    Route::get('/detail/{kode}', [RiwayatStraightLineController::class, 'detail'])->name('detail');
+    Route::delete('/destroy/{kode}', [RiwayatStraightLineController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('riwayat-saw')->group(function () {
+    Route::get('/', [RiwayatSawController::class, 'index'])->name('riwayat-saw.index');
+    Route::post('/simpan', [RiwayatSawController::class, 'store'])->name('riwayat-saw.store');
+    Route::get('/detail/{kode}', [RiwayatSawController::class, 'show'])->name('riwayat-saw.show');
+    Route::delete('/{kode}', [RiwayatSawController::class, 'destroy'])->name('riwayat-saw.destroy');
 
 });
+
+
+
 
     // 📑 Laporan
     Route::prefix('laporan')->name('laporan.')->group(function () {

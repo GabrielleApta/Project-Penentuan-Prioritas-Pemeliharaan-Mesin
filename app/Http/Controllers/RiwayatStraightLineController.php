@@ -2,46 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\RiwayatStraightLine;
+use App\Models\Mesin;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class RiwayatStraightLineController extends Controller
 {
     public function index()
     {
-        $riwayat = RiwayatStraightLine::select('kode_perhitungan', 'tanggal_generate', 'dibuat_oleh')
-            ->groupBy('kode_perhitungan', 'tanggal_generate', 'dibuat_oleh')
-            ->orderBy('tanggal_generate', 'desc')
-            ->get();
+        $riwayats = RiwayatStraightLine::select('kode_perhitungan', DB::raw('MAX(created_at) as created_at'))
+                        ->groupBy('kode_perhitungan')
+                        ->orderByDesc('created_at')
+                        ->get();
 
-        return view('pages.riwayat_straight_line.index', compact('riwayat'));
+        return view('pages.riwayat.straight_line.index', compact('riwayats'));
     }
 
-    public function show($kode)
+    public function simpan(Request $request)
     {
-        $riwayat = RiwayatStraightLine::with('mesin', 'user')
-            ->where('kode_perhitungan', $kode)
-            ->get();
+        $kode = RiwayatStraightLine::generateKode();
+        $mesins = Mesin::all();
+        $tahun = now()->year;
 
-        if ($riwayat->isEmpty())    {
-            return redirect()->back()->with('error', 'Data riwayat tidak ditemukan.');
+        foreach ($mesins as $mesin) {
+            $penyusutan = ($mesin->harga_beli - $mesin->nilai_sisa) / $mesin->umur_ekonomis;
+            $usia = $tahun - $mesin->tahun_pembelian;
+            $akumulasi = $penyusutan * min($usia, $mesin->umur_ekonomis);
+            $nilaiBuku = max($mesin->harga_beli - $akumulasi, $mesin->nilai_sisa);
+
+            RiwayatStraightLine::create([
+                'mesin_id' => $mesin->id,
+                'kode_perhitungan' => $kode,
+                'nama_mesin' => $mesin->nama_mesin,
+                'tahun_pembelian' => $mesin->tahun_pembelian,
+                'harga_beli' => $mesin->harga_beli,
+                'nilai_sisa' => $mesin->nilai_sisa,
+                'umur_ekonomis' => $mesin->umur_ekonomis,
+                'usia_mesin' => $usia,
+                'penyusutan_per_tahun' => $penyusutan,
+                'akumulasi_penyusutan' => $akumulasi,
+                'nilai_buku' => $nilaiBuku,
+            ]);
         }
 
-        $tanggalGenerate = $riwayat->first()->tanggal_generate;
-        $dibuatOleh = $riwayat->first()->user->name ?? 'Unknown';
+        return redirect()->back()->with('success', 'Data disimpan ke riwayat dengan kode ' . $kode);
+    }
 
-        return view('pages.riwayat_straight_line.show', compact('riwayat', 'kode', 'tanggalGenerate', 'dibuatOleh'));
+    public function detail($kode)
+    {
+        $riwayat = RiwayatStraightLine::where('kode_perhitungan', $kode)->get();
+        return view('pages.riwayat.straight_line.detail', compact('riwayat', 'kode'));
     }
 
     public function destroy($kode)
 {
-    $deletedRows = RiwayatStraightLine::where('kode_perhitungan', $kode)->delete();
+    RiwayatStraightLine::where('kode_perhitungan', $kode)->delete();
 
-    if ($deletedRows > 0) {
-        return redirect()->route('riwayat-straight-line.index')->with('success', 'Riwayat berhasil dihapus.');
-    } else {
-        return redirect()->back()->with('error', 'Riwayat tidak ditemukan atau sudah dihapus.');
-    }
+    // Redirect ke index, bukan ke destroy
+    return redirect()->route('riwayat.straight-line.index')
+                     ->with('success', 'Riwayat ' . $kode . ' berhasil dihapus.');
 }
 
 }

@@ -32,17 +32,14 @@
                     <i class="fas fa-sync-alt"></i> Hitung Ulang
                 </a>
 
-                <form action="{{ route('depresiasi.simpan') }}" method="POST" class="d-inline">
+                <form action="{{ route('riwayat.straight-line.simpan') }}" method="POST" class="d-inline">
     @csrf
-    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Yakin ingin memindahkan data ke riwayat dan mengosongkan data sekarang?')">
+    <button type="submit" class="btn btn-success btn-sm"
+        onclick="return confirm('Yakin ingin menyimpan ke riwayat?')">
         <i class="fas fa-save"></i> Simpan ke Riwayat
     </button>
 </form>
-
-
-
-
-                <a href="{{ route('riwayat-straight-line.index') }}" class="btn btn-outline-success btn-sm">
+                <a href="{{ route('riwayat.straight-line.index') }}" class="btn btn-outline-success btn-sm">
                     <i class="fas fa-file-excel"></i> Riwayat Perhitungan
                 </a>
             @endif
