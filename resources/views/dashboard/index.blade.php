@@ -4,15 +4,15 @@
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800">Dashboard</h1>
 
-    <!-- Card Statistik Mesin -->
+    <!-- Statistik Mesin -->
     <div class="row">
         @php
             $cards = [
                 ['color' => 'primary', 'label' => 'Total Mesin', 'value' => $totalMesin, 'route' => 'mesin.index'],
-                ['color' => 'success', 'label' => 'Mesin Samjin', 'value' => $mesinSamjin, 'route' => 'mesin.samjin'],
-                ['color' => 'info', 'label' => 'Mesin Twisting', 'value' => $mesinTwisting, 'route' => 'mesin.twisting'],
-                ['color' => 'danger', 'label' => 'Mesin Tidak Aktif', 'value' => $mesinTidakAktif, 'route' => 'mesin.tidakaktif'],
-                ['color' => 'warning', 'label' => 'Mesin Aktif', 'value' => $mesinAktif, 'route' => 'mesin.aktif']
+                ['color' => 'dark', 'label' => 'Kerusakan Ringan 2024', 'value' => $frekuensiRingan, 'route' => 'kerusakan-tahunan.index'],
+                ['color' => 'secondary', 'label' => 'Kerusakan Parah 2024', 'value' => $frekuensiParah, 'route' => 'kerusakan-tahunan.index'],
+                ['color' => 'info', 'label' => 'Rekapan Histori 2024', 'value' => $totalPemeliharaan, 'route' => 'kerusakan-tahunan.index'],
+                ['color' => 'danger', 'label' => 'Paling Sering Rusak', 'value' => "$mesinTerbanyakRusak ($jumlahKerusakanTerbanyak ×)", 'route' => 'kerusakan-tahunan.index']
             ];
         @endphp
 
@@ -29,21 +29,27 @@
         @endforeach
     </div>
 
-    <!-- Grafik Bubble Depresiasi dan SAW -->
+    <!-- Grafik Depresiasi & SAW -->
     <div class="row">
-        <!-- Grafik Bubble Depresiasi -->
+        <!-- Grafik Penyusutan -->
         <div class="col-lg-6 mb-4">
             <div class="card shadow h-100">
-                <div class="card-header py-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-chart-bubble"></i> Grafik Bubble Penyusutan Mesin
+                        <i class="fas fa-chart-line"></i> Top 5 Mesin – Nilai Buku (Line Chart)
                     </h6>
+                    <form id="filterForm" class="d-flex align-items-center">
+                        <label for="tahunFilter" class="mb-0 mr-2 text-dark">Tahun: </label>
+                        <select id="tahunFilter" class="form-control form-control-sm w-auto">
+                            @foreach ($listTahun as $tahun)
+                                <option value="{{ $tahun }}">{{ $tahun }}</option>
+                            @endforeach
+                        </select>
+                    </form>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-2">
-                        Visualisasi nilai buku mesin berdasarkan tahun dan penyusutan tahunan.
-                    </p>
-                    <canvas id="bubbleChartDepresiasi" height="230"></canvas>
+                    <canvas id="lineChartDepresiasi" height="230"></canvas>
+                    <p class="text-muted small mb-2">Menampilkan nilai buku mesin dengan penyusutan tertinggi dari tahun terpilih ke sekarang.</p>
                 </div>
             </div>
         </div>
@@ -57,10 +63,9 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-2">
-                        Skor hasil akhir dari perhitungan metode SAW.
-                    </p>
                     <canvas id="hasilSawChart" height="230"></canvas>
+                    <p class="mt-2 text-muted small">Skor SAW (Simple Additive Weighting) dihitung dari beberapa kriteria seperti usia mesin, frekuensi kerusakan, downtime, dan nilai ekonomis. Semakin tinggi skor, semakin tinggi prioritas pemeliharaan mesin.</p>
+
                 </div>
             </div>
         </div>
@@ -71,67 +76,89 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    // ========= BUBBLE CHART =========
-    const bubbleCtx = document.getElementById("bubbleChartDepresiasi").getContext("2d");
-    const bubbleRawData = @json($grafikBubbleDepresiasi);
+    const tahunSelect = document.getElementById("tahunFilter");
+    const ctxLine = document.getElementById("lineChartDepresiasi").getContext("2d");
+    let lineChart;
 
-    const bubbleDatasets = bubbleRawData.map(row => ({
-        label: row.label,
-        data: [{
-            x: row.x,
-            y: row.y,
-            r: row.r
-        }],
-        backgroundColor: row.backgroundColor,
-        borderColor: row.backgroundColor,
-        borderWidth: 1
-    }));
+    function fetchLineChartData(tahun) {
+        fetch(`/dashboard/top-depresiasi?tahun_awal=${tahun}`)
+            .then(response => response.json())
+            .then(data => {
+                if (lineChart) lineChart.destroy();
 
-    new Chart(bubbleCtx, {
-        type: 'bubble',
-        data: {
-            datasets: bubbleDatasets
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Bubble Chart - Nilai Buku dan Penyusutan Mesin'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => {
-                            const x = ctx.raw.x;
-                            const y = ctx.raw.y.toLocaleString('id-ID');
-                            const r = (ctx.raw.r * 1000000).toLocaleString('id-ID');
-                            return `${ctx.dataset.label}\nTahun: ${x}, Nilai Buku: Rp ${y}, Penyusutan: Rp ${r}`;
+                lineChart = new Chart(ctxLine, {
+                    type: 'line',
+                    data: {
+                        labels: data.labelsTahun,
+                        datasets: data.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Top 5 Mesin dengan Penyusutan Tertinggi'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => {
+                                        const val = ctx.raw;
+                                        return `${ctx.dataset.label}: Rp ${val?.toLocaleString('id-ID')}`;
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: { boxWidth: 15 }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Tahun' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Nilai Buku (Rp)' },
+                                ticks: {
+                                    callback: value => 'Rp ' + value.toLocaleString('id-ID')
+                                }
+                            }
                         }
                     }
-                },
-                legend: { display: false }
-            },
-            scales: {
-                x: {
-                    title: { display: true, text: 'Tahun' },
-                    ticks: { stepSize: 1 },
-                    beginAtZero: false
-                },
-                y: {
-                    title: { display: true, text: 'Nilai Buku (Rp)' },
-                    beginAtZero: true,
-                    ticks: {
-                        callback: value => 'Rp ' + value.toLocaleString('id-ID')
-                    }
-                }
-            }
-        }
+                });
+            });
+    }
+
+    // Trigger saat select berubah
+    tahunSelect.addEventListener("change", () => {
+        const tahun = tahunSelect.value;
+        fetchLineChartData(tahun);
     });
+
+    // Initial load
+    fetchLineChartData(tahunSelect.value);
 
     // ========= SAW CHART =========
     const ctxSaw = document.getElementById("hasilSawChart").getContext("2d");
     const labelsSaw = @json($labelsSaw ?? []);
     const dataSaw = @json($dataSaw ?? []);
+    Chart.register({
+    id: 'labelOnTop',
+    afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((dataset, i) => {
+            const meta = chart.getDatasetMeta(i);
+            meta.data.forEach((bar, index) => {
+                const value = dataset.data[index];
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`#${index + 1}`, bar.x, bar.y - 5);
+            });
+        });
+    }
+});
 
     new Chart(ctxSaw, {
         type: 'bar',
@@ -140,13 +167,18 @@ document.addEventListener("DOMContentLoaded", function () {
             datasets: [{
                 label: 'Skor Akhir SAW',
                 data: dataSaw.map(Number),
-                backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: dataSaw.map((val, idx) =>
+    idx === 0 ? 'rgba(255, 99, 132, 0.6)' : 'rgba(75, 192, 192, 0.5)'
+),
+borderColor: dataSaw.map((val, idx) =>
+    idx === 0 ? 'rgba(255, 99, 132, 1)' : 'rgba(75, 192, 192, 1)'
+),
+
                 borderWidth: 1
             }]
         },
         options: {
-            indexAxis: 'y',
+            indexAxis: 'x',
             responsive: true,
             plugins: {
                 title: {
@@ -159,6 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 },
                 legend: { display: false }
+                 labelOnTop: true
             },
             scales: {
                 x: {

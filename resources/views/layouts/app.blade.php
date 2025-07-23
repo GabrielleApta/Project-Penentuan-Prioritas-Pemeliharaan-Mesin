@@ -7,7 +7,7 @@
     <meta name="description" content="" />
     <meta name="author" content="" />
 
-    <title>@yield('title', 'Dashboard - SB Admin')</title>
+    <title>@yield('title', 'Dashboard')</title>
 
     {{-- Styles --}}
     <link href="{{ asset('sb-admin/css/styles.css') }}" rel="stylesheet" />

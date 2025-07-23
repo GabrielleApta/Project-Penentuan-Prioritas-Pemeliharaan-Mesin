@@ -10,6 +10,29 @@
         <li class="breadcrumb-item active">Data Kriteria dan Bobot</li>
     </ol>
 
+    <div class="card mb-4">
+    <div class="card-body">
+        <div class="alert alert-info d-flex align-items-start">
+            <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
+            <div>
+                <strong>Informasi:</strong><br>
+                Kriteria di bawah ini digunakan sebagai dasar perhitungan dalam metode <strong>SAW (Simple Additive Weighting)</strong> untuk menentukan prioritas pemeliharaan mesin.
+                <ul class="mb-0 mt-1">
+                    <li><strong>Bobot</strong> menunjukkan tingkat kepentingan kriteria (harus total 1 atau 100%).</li>
+                    <li><strong>Jenis kriteria</strong> menentukan arah penilaian:
+                        <ul>
+                            <li><em>Benefit</em> = semakin tinggi nilai, semakin baik.</li>
+                            <li><em>Cost</em> = semakin rendah nilai, semakin baik.</li>
+                        </ul>
+                    </li>
+                    <li>Edit atau hapus data kriteria dengan bijak, karena akan mempengaruhi hasil perhitungan.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <div class="card shadow mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Data Kriteria</div>

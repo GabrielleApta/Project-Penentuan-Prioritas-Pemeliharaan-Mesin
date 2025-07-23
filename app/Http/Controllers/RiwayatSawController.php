@@ -41,18 +41,10 @@ class RiwayatSawController extends Controller
                 'waktu_downtime'        => $penilaian->waktu_downtime,
                 'skor_akhir'            => $item->skor_akhir,
                 'ranking'               => $item->rangking,
-
-            'norm_akumulasi_penyusutan'        => $item->norm_akumulasi_penyusutan,
-            'norm_usia_mesin'        => $item->norm_usia_mesin,
-            'norm_frekuensi_kerusakan'        => $item->norm_frekuensi_kerusakan,
-            'norm_waktu_downtime'        => $item->norm_waktu_downtime,
             ]);
-
-
         }
 
         return redirect()->route('prioritas.index')->with('success', 'Riwayat SAW berhasil disimpan.');
-
     }
 
     public function show($kode)

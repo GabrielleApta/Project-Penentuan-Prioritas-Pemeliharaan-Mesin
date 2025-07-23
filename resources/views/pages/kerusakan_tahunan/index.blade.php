@@ -19,13 +19,19 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            <div class="alert alert-info d-flex align-items-start">
-                <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
-                <div>
-                    Data ini digunakan untuk menghitung prioritas pemeliharaan mesin dengan metode
-                    <strong>Straight Line</strong> dan <strong>SAW</strong>. Pastikan semua data kerusakan mesin tahunannya lengkap dan valid.
-                </div>
-            </div>
+           <div class="alert alert-info d-flex align-items-start">
+    <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
+    <div>
+        <p>Data ini digunakan untuk menghitung prioritas pemeliharaan mesin dengan metode
+            <strong>Straight Line</strong> dan <strong>SAW</strong>. Pastikan semua data kerusakan mesin tahunannya lengkap dan valid.</p>
+
+        <ul class="mb-0">
+            <li><strong>Kerusakan Ringan:</strong> gangguan kecil yang tidak menghentikan proses produksi, seperti kebocoran kecil, suara abnormal, atau komponen aus ringan.</li>
+            <li><strong>Kerusakan Parah:</strong> kerusakan besar yang menyebabkan penghentian produksi atau menimbulkan bahaya operasional, seperti kerusakan motor utama, panel kendali terbakar, atau komponen utama patah.</li>
+        </ul>
+    </div>
+</div>
+
         </div>
     </div>
 

@@ -15,12 +15,17 @@
         <div class="alert alert-info d-flex align-items-start">
             <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
             <div>
-                Data mesin di bawah ini menjadi dasar dalam proses perhitungan prioritas pemeliharaan berbasis metode <em><strong> Straight Line</strong></em> dan <strong>SAW</strong>.<br>
-                Pastikan seluruh informasi mesin seperti harga beli, tahun pembelian sudah terisi dengan benar.
+                Halaman ini memuat data utama setiap mesin yang digunakan dalam proses produksi. Informasi mesin sangat krusial karena menjadi dasar dalam:
+                <ul class="mb-0 ps-3">
+                    <li><strong>Perhitungan penyusutan</strong> menggunakan metode <em>Straight Line</em></li>
+                    <li><strong>Evaluasi prioritas pemeliharaan</strong> menggunakan metode <strong>SAW</strong></li>
+                </ul>
+                Pastikan data seperti <em>harga beli</em>, <em>tahun pembelian</em>, <em>umur ekonomis</em>, dan <em>nilai sisa</em> sudah terisi akurat agar hasil analisis lebih valid.
             </div>
         </div>
     </div>
 </div>
+
 
 
     <div class="card mb-4 shadow">

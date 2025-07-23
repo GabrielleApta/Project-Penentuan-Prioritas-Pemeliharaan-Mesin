@@ -166,7 +166,11 @@ Route::prefix('riwayat-saw')->group(function () {
         Route::patch('/{user}', [UserController::class, 'update'])->name('update');
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     });
+
+
+Route::get('/dashboard/top-depresiasi', [DashboardController::class, 'ajaxTopDepresiasi'])->name('dashboard.top-depresiasi');
 });
+
 
 // 🔂 Auth tambahan (Laravel Breeze / Fortify)
 require __DIR__ . '/auth.php';
