@@ -12,16 +12,17 @@ class PenilaianMesin extends Model
     protected $table = 'penilaian_mesin';
 
     protected $fillable = [
-         'mesin_id',
-    'akumulasi_penyusutan',
-    'usia_mesin',
-    'frekuensi_kerusakan',
-    'waktu_downtime',
-    'tahun_penilaian',
+        'mesin_id',
+        'akumulasi_penyusutan',
+        'usia_mesin',
+        'frekuensi_kerusakan',
+        'waktu_downtime',
+        'tahun_penilaian',
     ];
 
+    // ✅ EXPLICIT FOREIGN KEY AND LOCAL KEY
     public function mesin()
     {
-        return $this->belongsTo(Mesin::class);
+        return $this->belongsTo(Mesin::class, 'mesin_id', 'id');
     }
 }

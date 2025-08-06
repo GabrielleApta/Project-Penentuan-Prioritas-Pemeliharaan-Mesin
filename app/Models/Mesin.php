@@ -35,9 +35,9 @@ class Mesin extends Model
     }
 
     // Relasi ke tabel penilaian_mesin
-    public function penilaian()
+    public function penilaianMesin()
     {
-        return $this->hasMany(PenilaianMesin::class, 'mesin_id');
+        return $this->hasMany(PenilaianMesin::class, 'mesin_id', 'id');
     }
 
     // Relasi ke tabel hasil_saw
@@ -75,7 +75,7 @@ class Mesin extends Model
     {
     return $this->hasMany(RiwayatSaw::class);
     }
-    
+
     //Relasi ke tabel riwayat saw
     public function riwayatStraightLine()
     {

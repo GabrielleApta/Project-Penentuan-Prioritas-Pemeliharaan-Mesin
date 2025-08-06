@@ -60,7 +60,8 @@
                         @forelse($jadwals as $index => $jadwal)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $jadwal->mesin->nama_mesin }}</td>
+                                {{-- PERBAIKAN DI SINI - LINE 63 --}}
+                                <td>{{ $jadwal->mesin ? $jadwal->mesin->nama_mesin : 'Mesin Tidak Ditemukan' }}</td>
                                 <td>{{ \Carbon\Carbon::parse($jadwal->tanggal_jadwal)->format('d-m-Y') }}</td>
                                 <td>
                                     @php
@@ -93,7 +94,7 @@
                                         ? \Carbon\Carbon::parse($jadwal->tanggal_selesai)->format('d-m-Y')
                                         : '-' }}
                                 </td>
-                                <td>{{ $jadwal->catatan}}</td>
+                                <td>{{ $jadwal->catatan ?? '-' }}</td>
                                 <td>
                                     <button class="btn btn-sm btn-info" data-bs-toggle="modal"
         data-bs-target="#modalEditJadwal{{ $jadwal->id }}">

@@ -11,9 +11,8 @@
         <li class="breadcrumb-item active"> Tabel Skor Mesin</li>
     </ol>
 
-
-        <div class="card-body">
-            <div class="alert alert-info d-flex align-items-start">
+    <div class="card-body">
+        <div class="alert alert-info d-flex align-items-start">
             <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
             <div>
                 Data mesin di bawah ini menjadi dasar dalam proses perhitungan prioritas pemeliharaan berbasis metode <em><strong> Straight Line</strong></em> dan <strong>SAW</strong>.<br>
@@ -21,29 +20,27 @@
             </div>
         </div>
     </div>
-</div>
 
     <div class="card mb-4 shadow">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Penilaian Mesin</div>
-        <div>
-            @if(auth()->user()->role === 'regu_mekanik')
-            <form action="{{ route('penilaian.generate') }}" method="POST" class="d-inline">
-        @csrf
-        <button type="submit" class="btn btn-primary btn-sm"
-            onclick="return confirm('Yakin ingin generate ulang data penilaian mesin?\nData lama akan diperbarui.')">
-            <i class="fas fa-sync-alt me-1"></i> Generate Penilaian
-        </button>
-    </form>
-            @endif
-            <a href="{{ route('penilaian.normalisasi') }}" class="btn btn-outline-success btn-sm">
-        <i class="fas fa-table me-1"></i> Lihat Hasil Normalisasi (SAW)
-    </a>
-        </div>
+            <div>
+                @if(auth()->user()->role === 'regu_mekanik')
+                <form action="{{ route('penilaian.generate') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-sm"
+                        onclick="return confirm('Yakin ingin generate ulang data penilaian mesin?\nData lama akan diperbarui.')">
+                        <i class="fas fa-sync-alt me-1"></i> Generate Penilaian
+                    </button>
+                </form>
+                @endif
+                <a href="{{ route('penilaian.normalisasi') }}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-table me-1"></i> Lihat Hasil Normalisasi (SAW)
+                </a>
+            </div>
         </div>
 
         <div class="card-body">
-
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
@@ -51,7 +48,7 @@
                 </div>
             @endif
 
-            {{-- Tabel Penilaian --}}
+            {{-- ✅ LANGSUNG TAMPILKAN TABEL TANPA CONDITIONAL --}}
             <div class="table-responsive">
                 <table id="dataTable" class="table table-striped table-bordered text-center align-middle" style="width:100%">
                     <thead class="thead-dark text-nowrap">
@@ -66,11 +63,11 @@
                     <tbody>
                         @forelse ($penilaian as $p)
                             <tr class="text-center align-middle">
-                                <td>{{ $p->mesin->nama_mesin ?? '-' }}</td>
-                                <td>Rp{{ number_format($p->akumulasi_penyusutan, 0, ',', '.') }}</td>
-                                <td>{{ $p->usia_mesin }} tahun</td>
-                                <td>{{ round($p->frekuensi_kerusakan) }} kali</td>
-                                <td>{{ $p->waktu_downtime }} jam</td>
+                                <td>{{ $p->nama_mesin }}</td>
+                                <td>Rp{{ number_format($p->akumulasi_penyusutan ?? 0, 0, ',', '.') }}</td>
+                                <td>{{ $p->usia_mesin ?? 0 }} tahun</td>
+                                <td>{{ round($p->frekuensi_kerusakan ?? 0) }} kali</td>
+                                <td>{{ number_format($p->waktu_downtime ?? 0, 2) }} jam</td>
                             </tr>
                         @empty
                             <tr>
@@ -82,4 +79,5 @@
             </div>
         </div>
     </div>
+</div>
 @endsection

@@ -60,6 +60,23 @@
                 @endif
             </div>
         </div>
+
+        <!-- Logout di bagian paling bawah -->
+        <div class="sb-sidenav-footer">
+            <button type="button" class="nav-link border-0 bg-transparent text-start w-100"
+                    style="color: rgba(255,255,255,.55);"
+                    onmouseover="this.style.color='rgba(255,255,255,.75)'; this.style.backgroundColor='rgba(220, 53, 69, 0.1)'"
+                    onmouseout="this.style.color='rgba(255,255,255,.55)'; this.style.backgroundColor='transparent'"
+                    onclick="confirmLogout()">
+                <div class="sb-nav-link-icon"><i class="fas fa-sign-out-alt"></i></div>
+                Logout
+            </button>
+
+            <!-- Hidden form untuk logout -->
+            <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display: none;">
+                @csrf
+            </form>
+        </div>
     </nav>
 </div>
 
@@ -67,7 +84,7 @@
     /* Perbaikan untuk sidebar yang lebih rapi tanpa mengubah struktur utama */
     .sb-sidenav .nav-link {
         padding: 0.75rem 1rem !important;
-        font-size: 0.975rem !important;
+        font-size: 1rem !important;
         line-height: 1.2 !important;
         word-wrap: break-word !important;
         white-space: normal !important;
@@ -106,6 +123,11 @@
         padding-bottom: 0.75rem !important;
     }
 
+    /* Style khusus untuk logout button */
+    .sb-sidenav form button.nav-link {
+        transition: all 0.2s ease-in-out !important;
+    }
+
     /* Responsive untuk layar yang lebih kecil */
     @media (max-width: 992px) {
         .sb-sidenav .nav-link {
@@ -118,3 +140,27 @@
         }
     }
 </style>
+
+<!-- Sweet Alert CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function confirmLogout() {
+    Swal.fire({
+        title: 'Konfirmasi Logout',
+        text: 'Apakah Anda yakin ingin keluar?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Logout',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Submit form logout
+            document.getElementById('logout-form').submit();
+        }
+    });
+}
+</script>
