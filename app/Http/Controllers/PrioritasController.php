@@ -27,18 +27,25 @@ class PrioritasController extends Controller
 
     public function index()
     {
-        $hasil_saw = Prioritas::with('mesin')->orderBy('rangking')->get();
+        // Hanya tampilkan data yang mesinnya masih ada
+        $hasil_saw = Prioritas::with('mesin')
+            ->whereHas('mesin') // Filter hanya yang punya relasi mesin
+            ->orderBy('rangking')
+            ->get();
+
         return view('pages.prioritas.index', compact('hasil_saw'));
     }
 
     public function hitungSAW()
     {
+        // Hanya ambil penilaian yang mesinnya masih ada
         $penilaian = PenilaianMesin::with('mesin')
+            ->whereHas('mesin') // Filter hanya yang punya relasi mesin
             ->where('tahun_penilaian', $this->tahun)
             ->get();
 
         if ($penilaian->isEmpty()) {
-            return back()->with('error', "Data penilaian tahun {$this->tahun} belum tersedia.");
+            return back()->with('error', "Data penilaian tahun {$this->tahun} belum tersedia atau semua mesin sudah dihapus.");
         }
 
         // Ambil nilai mentah
@@ -76,24 +83,24 @@ class PrioritasController extends Controller
         Prioritas::insert($hasil);
 
         // ====== Tambahan: Simpan ke tabel riwayat_saw ======
-    $kode_perhitungan = 'SAW-' . now()->format('Y') . '-' . str_pad(RiwayatSaw::count() + 1, 3, '0', STR_PAD_LEFT);
+        $kode_perhitungan = 'SAW-' . now()->format('Y') . '-' . str_pad(\App\Models\RiwayatSaw::count() + 1, 3, '0', STR_PAD_LEFT);
 
-    foreach ($hasil as $row) {
-        $p = $penilaian->firstWhere('mesin_id', $row['mesin_id']);
-        if (!$p) continue;
+        foreach ($hasil as $row) {
+            $p = $penilaian->firstWhere('mesin_id', $row['mesin_id']);
+            if (!$p || !$p->mesin) continue; // Skip jika mesin tidak ada
 
-        \App\Models\RiwayatSaw::create([
-            'mesin_id'             => $p->mesin->id,
-            'kode_perhitungan'     => $kode_perhitungan,
-            'nama_mesin'           => $p->mesin->nama_mesin,
-            'akumulasi_penyusutan' => $p->akumulasi_penyusutan,
-            'usia_mesin'           => $p->usia_mesin,
-            'frekuensi_kerusakan'  => $p->frekuensi_kerusakan,
-            'waktu_downtime'       => $p->waktu_downtime,
-            'skor_akhir'           => $row['skor_akhir'],
-            'ranking'              => $row['rangking'],
-        ]);
-    }
+            \App\Models\RiwayatSaw::create([
+                'mesin_id'             => $p->mesin->id,
+                'kode_perhitungan'     => $kode_perhitungan,
+                'nama_mesin'           => $p->mesin->nama_mesin,
+                'akumulasi_penyusutan' => $p->akumulasi_penyusutan,
+                'usia_mesin'           => $p->usia_mesin,
+                'frekuensi_kerusakan'  => $p->frekuensi_kerusakan,
+                'waktu_downtime'       => $p->waktu_downtime,
+                'skor_akhir'           => $row['skor_akhir'],
+                'ranking'              => $row['rangking'],
+            ]);
+        }
 
         return redirect()->route('prioritas.index')->with('success', 'Perhitungan SAW berhasil dilakukan.');
     }
@@ -103,18 +110,23 @@ class PrioritasController extends Controller
         $penilaian = PenilaianMesin::with('mesin')
             ->where('mesin_id', $mesin_id)
             ->where('tahun_penilaian', $this->tahun)
+            ->whereHas('mesin') // Pastikan mesinnya masih ada
             ->firstOrFail();
 
         $data = $penilaian->only(array_keys($this->kriteria));
         $data['mesin_id'] = $mesin_id;
 
-        $semua = PenilaianMesin::where('tahun_penilaian', $this->tahun)->get()->map(fn($p) => [
-            'mesin_id'             => $p->mesin_id,
-            'akumulasi_penyusutan' => $p->akumulasi_penyusutan,
-            'usia_mesin'           => $p->usia_mesin,
-            'frekuensi_kerusakan'  => $p->frekuensi_kerusakan,
-            'waktu_downtime'       => $p->waktu_downtime,
-        ])->toArray();
+        // Hanya ambil data yang mesinnya masih ada untuk perhitungan normalisasi
+        $semua = PenilaianMesin::whereHas('mesin')
+            ->where('tahun_penilaian', $this->tahun)
+            ->get()
+            ->map(fn($p) => [
+                'mesin_id'             => $p->mesin_id,
+                'akumulasi_penyusutan' => $p->akumulasi_penyusutan,
+                'usia_mesin'           => $p->usia_mesin,
+                'frekuensi_kerusakan'  => $p->frekuensi_kerusakan,
+                'waktu_downtime'       => $p->waktu_downtime,
+            ])->toArray();
 
         $normal = collect($this->normalisasi($semua))->firstWhere('mesin_id', $mesin_id);
 
@@ -133,7 +145,12 @@ class PrioritasController extends Controller
 
     public function printPDF()
     {
-        $hasil_saw = Prioritas::with('mesin')->orderBy('rangking')->get();
+        // Hanya tampilkan data yang mesinnya masih ada
+        $hasil_saw = Prioritas::with('mesin')
+            ->whereHas('mesin')
+            ->orderBy('rangking')
+            ->get();
+
         $pdf = PDF::loadView('pages.prioritas.printPDF', compact('hasil_saw'));
         return $pdf->stream('hasil_saw.pdf');
     }
@@ -148,18 +165,23 @@ class PrioritasController extends Controller
         $penilaian = PenilaianMesin::with('mesin')
             ->where('mesin_id', $mesin_id)
             ->where('tahun_penilaian', $this->tahun)
+            ->whereHas('mesin') // Pastikan mesinnya masih ada
             ->firstOrFail();
 
         $data = $penilaian->only(array_keys($this->kriteria));
         $data['mesin_id'] = $mesin_id;
 
-        $semua = PenilaianMesin::where('tahun_penilaian', $this->tahun)->get()->map(fn($p) => [
-            'mesin_id'             => $p->mesin_id,
-            'akumulasi_penyusutan' => $p->akumulasi_penyusutan,
-            'usia_mesin'           => $p->usia_mesin,
-            'frekuensi_kerusakan'  => $p->frekuensi_kerusakan,
-            'waktu_downtime'       => $p->waktu_downtime,
-        ])->toArray();
+        // Hanya ambil data yang mesinnya masih ada
+        $semua = PenilaianMesin::whereHas('mesin')
+            ->where('tahun_penilaian', $this->tahun)
+            ->get()
+            ->map(fn($p) => [
+                'mesin_id'             => $p->mesin_id,
+                'akumulasi_penyusutan' => $p->akumulasi_penyusutan,
+                'usia_mesin'           => $p->usia_mesin,
+                'frekuensi_kerusakan'  => $p->frekuensi_kerusakan,
+                'waktu_downtime'       => $p->waktu_downtime,
+            ])->toArray();
 
         $normal = collect($this->normalisasi($semua))->firstWhere('mesin_id', $mesin_id);
 
@@ -182,33 +204,39 @@ class PrioritasController extends Controller
     }
 
     private function normalisasi(array $data)
-{
-    $kriteria = [
-        'akumulasi_penyusutan' => ['bobot' => 0.3, 'jenis' => 'cost'],
-        'usia_mesin'           => ['bobot' => 0.3, 'jenis' => 'cost'],
-        'frekuensi_kerusakan'  => ['bobot' => 0.2, 'jenis' => 'cost'],
-        'waktu_downtime'       => ['bobot' => 0.2, 'jenis' => 'cost'],
-    ];
+    {
+        $kriteria = [
+            'akumulasi_penyusutan' => ['bobot' => 0.3, 'jenis' => 'cost'],
+            'usia_mesin'           => ['bobot' => 0.3, 'jenis' => 'cost'],
+            'frekuensi_kerusakan'  => ['bobot' => 0.2, 'jenis' => 'cost'],
+            'waktu_downtime'       => ['bobot' => 0.2, 'jenis' => 'cost'],
+        ];
 
-    $result = [];
+        $result = [];
 
-    foreach ($kriteria as $k => $meta) {
-        $values = array_column($data, $k);
-        $extreme = $meta['jenis'] === 'benefit' ? max($values) : min($values);
-        $extreme = $extreme ?: 0.0001;
+        foreach ($kriteria as $k => $meta) {
+            $values = array_column($data, $k);
+            $extreme = $meta['jenis'] === 'benefit' ? max($values) : min($values);
+            $extreme = $extreme ?: 0.0001;
 
-        foreach ($data as $i => $row) {
-            $val = $row[$k] ?: 0.0001;
-            $norm = $meta['jenis'] === 'benefit' ? $val / $extreme : $extreme / $val;
+            foreach ($data as $i => $row) {
+                $val = $row[$k] ?: 0.0001;
+                $norm = $meta['jenis'] === 'benefit' ? $val / $extreme : $extreme / $val;
 
-            $result[$i]['mesin_id'] = $row['mesin_id'];
-            $result[$i][$k] = $norm;
+                $result[$i]['mesin_id'] = $row['mesin_id'];
+                $result[$i][$k] = $norm;
+            }
         }
+
+        return $result;
     }
 
-    return $result;
-}
+    // Method untuk cleanup data prioritas orphan (opsional)
+    public function cleanupOrphanData()
+    {
+        $deletedCount = Prioritas::whereDoesntHave('mesin')->delete();
 
-
-
+        return redirect()->route('prioritas.index')
+            ->with('success', "Berhasil membersihkan {$deletedCount} data prioritas yang tidak valid");
+    }
 }

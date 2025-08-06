@@ -32,7 +32,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Data Mesin</div>
             <div>
-                @if(auth()->user()->role === 'admin')
+                @if(auth()->user()->role === 'regu_mekanik')
                 <a href="{{ route('mesin.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Tambah Data
                 </a>
@@ -61,8 +61,8 @@
                     <thead class="thead-dark text-nowrap">
                         <tr>
                             <th class="text-center">No</th>
-                            <th class="text-center">Nama Mesin</th>
                             <th class="text-center">Kode Mesin</th>
+                            <th class="text-center">Nama Mesin</th>
                             <th class="text-center">Tahun Pembelian</th>
                             <th class="text-center">Spesifikasi Mesin</th>
                             <th class="text-center">Daya Motor</th>
@@ -74,8 +74,8 @@
                         @foreach ($mesin as $index => $m)
 <tr>
     <td>{{ $index + 1 }}</td>
-    <td class="text-start">{{ $m->nama_mesin }}</td>
     <td>{{ $m->kode_mesin }}</td>
+    <td class="text-start">{{ $m->nama_mesin }}</td>
     <td>{{ $m->tahun_pembelian }}</td>
     <td class="text-nowrap">{{ $m->spesifikasi_mesin }}</td>
     <td>
@@ -84,7 +84,7 @@
     <td>{{ $m->lokasi_mesin }}</td>
 
     <td class="text-nowrap">
-    @if(auth()->user()->role === 'admin')
+    @if(auth()->user()->role === 'regu_mekanik')
     <div class="d-flex gap-2">
         <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditMesin{{ $m->id }}">
             <i class="fas fa-edit"></i> Edit

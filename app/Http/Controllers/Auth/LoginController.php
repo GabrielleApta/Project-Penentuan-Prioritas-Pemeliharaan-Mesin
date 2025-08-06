@@ -24,10 +24,10 @@ class LoginController extends Controller
             $user = Auth::user();
 
             // Cek peran (role) dan redirect sesuai role
-            if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard')->with('success', 'Login berhasil sebagai Admin!');
-            } elseif ($user->role === 'user') {
-                return redirect()->route('user.dashboard')->with('success', 'Login berhasil sebagai User!');
+            if ($user->role === 'regu_mekanik') {
+                return redirect()->route('regu_mekanik.dashboard')->with('success', 'Login berhasil sebagai Regu Mekanik!');
+            } elseif ($user->role === 'koordinator_mekanik') {
+                return redirect()->route('koordinator_mekanik.dashboard')->with('success', 'Login berhasil sebagai Koordinator Mekanik!');
             }
 
             return redirect()->route('login')->withErrors(['email' => 'Role tidak valid!']);

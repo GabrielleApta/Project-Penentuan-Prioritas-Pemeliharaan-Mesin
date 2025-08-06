@@ -13,22 +13,31 @@
     <div class="card mb-4">
     <div class="card-body">
         <div class="alert alert-info d-flex align-items-start">
-            <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
-            <div>
-                <strong>Informasi:</strong><br>
-                Kriteria di bawah ini digunakan sebagai dasar perhitungan dalam metode <strong>SAW (Simple Additive Weighting)</strong> untuk menentukan prioritas pemeliharaan mesin.
-                <ul class="mb-0 mt-1">
-                    <li><strong>Bobot</strong> menunjukkan tingkat kepentingan kriteria (harus total 1 atau 100%).</li>
-                    <li><strong>Jenis kriteria</strong> menentukan arah penilaian:
-                        <ul>
-                            <li><em>Benefit</em> = semakin tinggi nilai, semakin baik.</li>
-                            <li><em>Cost</em> = semakin rendah nilai, semakin baik.</li>
-                        </ul>
-                    </li>
-                    <li>Edit atau hapus data kriteria dengan bijak, karena akan mempengaruhi hasil perhitungan.</li>
-                </ul>
-            </div>
-        </div>
+    <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
+    <div>
+        <strong>Informasi:</strong><br>
+        Kriteria berikut digunakan dalam proses perhitungan <strong>SAW (Simple Additive Weighting)</strong> untuk menentukan tingkat prioritas pemeliharaan mesin produksi.<br><br>
+
+        <strong>Jenis Kriteria:</strong><br>
+        Seluruh kriteria yang digunakan ditetapkan sebagai <strong>Cost</strong>, karena seluruh indikator yang dinilai mencerminkan beban atau kerugian yang perlu diminimalkan. Misalnya:
+        <ul class="mb-2 mt-1">
+            <li><strong>Usia Mesin:</strong> Semakin tua mesin, semakin besar potensi kerusakan, sehingga semakin rendah nilainya semakin baik.</li>
+            <li><strong>Frekuensi Kerusakan:</strong> Mesin yang sering rusak menunjukkan reliabilitas rendah.</li>
+            <li><strong>Downtime:</strong> Durasi waktu henti yang panjang menurunkan produktivitas.</li>
+            <li><strong>Akumulasi Penyusutan:</strong> Semakin tinggi nilai penyusutan, semakin rendah nilai ekonomis aset.</li>
+        </ul>
+
+        <strong>Penetapan Bobot:</strong><br>
+        Bobot pada setiap kriteria merepresentasikan tingkat kepentingan relatif terhadap tujuan akhir sistem, yaitu menjaga keberlangsungan operasional dengan efisiensi maksimal:
+        <ul class="mb-0 mt-1">
+            <li><strong>Akumulasi Penyusutan (30%):</strong> Mewakili nilai ekonomi aset. Mesin yang nilai bukunya hampir nol cenderung membutuhkan penggantian, sehingga sangat krusial.</li>
+            <li><strong>Usia Mesin (30%):</strong> Usia adalah indikator umum terhadap keausan komponen. Makin tua mesin, makin besar potensi kerusakan sistemik.</li>
+            <li><strong>Frekuensi Kerusakan (20%):</strong> Menunjukkan intensitas gangguan teknis dalam periode waktu tertentu. Meskipun penting, aspek ini sering bersifat fluktuatif.</li>
+            <li><strong>Waktu Downtime (20%):</strong> Mencerminkan waktu tidak produktif akibat kerusakan. Aspek ini penting dari sisi efisiensi waktu produksi.</li>
+        </ul>
+    </div>
+</div>
+
     </div>
 </div>
 
@@ -37,7 +46,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Data Kriteria</div>
         <div>
-            @if(auth()->user()->role === 'admin')
+            @if(auth()->user()->role === 'regu_mekanik')
                 <a href="{{ route('kriteria.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Tambah Data
                 </a>
@@ -61,7 +70,7 @@
                             <th>Nama Kriteria</th>
                             <th>Bobot</th>
                             <th>Jenis</th>
-                            @if(auth()->user()->role === 'admin')
+                            @if(auth()->user()->role === 'regu_mekanik')
                                 <th>Aksi</th>
                             @endif
                         </tr>
@@ -73,7 +82,7 @@
                                 <td>{{ $item->nama_kriteria }}</td>
                                 <td>{{ $item->bobot * 100 }}%</td>
                                 <td>{{ ucfirst($item->jenis_kriteria) }}</td>
-                                @if(auth()->user()->role === 'admin')
+                                @if(auth()->user()->role === 'regu_mekanik')
                                 <td>
                                     <div class="d-flex justify-content-center gap-2">
                                         <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditKriteria{{ $item->id }}">

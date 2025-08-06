@@ -7,6 +7,7 @@ use App\Models\Mesin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class HistoryPemeliharaanController extends Controller
@@ -60,7 +61,7 @@ public function store(Request $request)
         $validated = $request->validate([
             'mesin_id' => 'nullable|exists:mesin,id',
             'tanggal' => 'required|date',
-            'jenis_pemeliharaan' => 'required|string|max:255',
+            'jenis_pemeliharaan' => ['required', Rule::in(['preventive', 'corrective'])],
             'deskripsi' => 'nullable|string',
             'durasi_jam' => 'nullable|numeric|min:0',
             'teknisi' => 'nullable|string|max:255',
@@ -76,7 +77,11 @@ public function store(Request $request)
 
             $validated['foto_bukti'] = $request->file('foto_bukti')->store('foto_pemeliharaan', 'public');
         }
-
+        // Sebelum $history->update(...), tambahkan:
+if (auth()->user()->role !== 'koordinator') {
+    // Kalau bukan koordinator, pastikan nilai verifikasi tidak diubah
+    unset($validated['verifikasi']);
+}
         $history->update($validated);
 
         return redirect()->route('history-pemeliharaan.index')->with('success', 'Data histori berhasil diperbarui!');
@@ -94,4 +99,28 @@ public function store(Request $request)
 
         return redirect()->route('history-pemeliharaan.index')->with('success', 'Data histori berhasil dihapus!');
     }
+
+   public function exportPdfFiltered(Request $request)
+{
+    $tahun = $request->tahun;
+    $mesinId = $request->mesin_id;
+
+    $query = HistoryPemeliharaan::with('mesin');
+
+    if ($tahun) {
+        $query->whereYear('tanggal', $tahun);
+    }
+
+    if ($mesinId) {
+        $query->where('mesin_id', $mesinId);
+    }
+
+    $histories = $query->orderBy('tanggal', 'asc')->get();
+
+    $pdf = Pdf::loadView('pages.history.pdf', compact('histories', 'tahun'));
+    $pdf->setPaper('A4', 'landscape');
+
+    return $pdf->stream('laporan-histori-pemeliharaan.pdf');
+}
+
 }

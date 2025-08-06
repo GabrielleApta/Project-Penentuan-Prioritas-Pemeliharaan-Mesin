@@ -25,15 +25,19 @@
 
     <div class="card mb-4 shadow">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <div><i class="fas fa-tools me-1"></i> Tabel Histori Pemeliharaan</div>
-            <div>
-                @if(auth()->user()->role === 'admin')
-                <a href="{{ route('history-pemeliharaan.create') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus"></i> Tambah Data
-                </a>
-                @endif
-            </div>
-        </div>
+    <div><i class="fas fa-tools me-1"></i> Tabel Histori Pemeliharaan</div>
+    <div>
+        @if(Auth::user()->role == 'regu_mekanik')
+        <a href="{{ route('history-pemeliharaan.create') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Tambah Data
+        </a>
+        @endif
+        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalFilterPDF">
+            <i class="fas fa-file-pdf"></i> Export PDF
+        </button>
+    </div>
+</div>
+
 
         <div class="card-body">
             @if(session('success'))
@@ -64,7 +68,8 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td class="text-start">{{ $h->mesin->nama_mesin ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($h->tanggal)->format('d M Y') }}</td>
+                           <td>{{ \Carbon\Carbon::parse($h->tanggal)->locale('id')->translatedFormat('d M Y') }}</td>
+
                             <td>{{ ucfirst($h->jenis_pemeliharaan) }}</td>
                             <td>{{ $h->deskripsi }}</td>
                             <td>{{ $h->durasi_jam }} jam</td>
@@ -130,8 +135,8 @@
                                                     </div>
                                                     <div class="form-floating mb-3">
                                                         <select name="jenis_pemeliharaan" class="form-select" required>
-                                                            <option value="rutin" {{ $h->jenis_pemeliharaan == 'rutin' ? 'selected' : '' }}>Rutin</option>
-                                                            <option value="perbaikan" {{ $h->jenis_pemeliharaan == 'perbaikan' ? 'selected' : '' }}>Perbaikan</option>
+                                                            <option value="preventive" {{ $h->jenis_pemeliharaan == 'preventive' ? 'selected' : '' }}>Preventive</option>
+                                                            <option value="corrective" {{ $h->jenis_pemeliharaan == 'corrective' ? 'selected' : '' }}>Corrective</option>
                                                         </select>
                                                         <label>Jenis Pemeliharaan</label>
                                                     </div>
@@ -155,9 +160,15 @@
                                                         <small class="text-muted">Biarkan kosong jika tidak mengubah.</small>
                                                     </div>
                                                     <div class="form-check mb-3">
-                                                        <input type="checkbox" name="verifikasi" class="form-check-input" id="verifikasi{{ $h->id }}" {{ $h->verifikasi ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="verifikasi{{ $h->id }}">Terverifikasi</label>
-                                                    </div>
+    <input type="checkbox" name="verifikasi" class="form-check-input" id="verifikasi{{ $h->id }}"
+        {{ $h->verifikasi ? 'checked' : '' }}
+        {{ auth()->user()->role !== 'koordinator_mekanik' ? 'disabled' : '' }}>
+    <label class="form-check-label" for="verifikasi{{ $h->id }}">Terverifikasi</label>
+
+    @if(auth()->user()->role !== 'koordinator_mekanik')
+        <small class="text-muted d-block">* Hanya Koordinator Mekanik yang dapat memverifikasi</small>
+    @endif
+</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -182,6 +193,41 @@
         </div>
     </div>
 </div>
+
+{{-- Modal Filter PDF --}}
+<div class="modal fade" id="modalFilterPDF" tabindex="-1" aria-labelledby="filterPDFLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('history-pemeliharaan.exportPdfFiltered') }}" method="POST" target="_blank">
+            @csrf
+            <div class="modal-content shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterPDFLabel">Export PDF Histori Pemeliharaan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="tahun" class="form-label">Tahun</label>
+                        <input type="number" class="form-control" name="tahun" placeholder="Contoh: 2024">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mesin_id" class="form-label">Nama Mesin</label>
+                        <select name="mesin_id" class="form-select">
+                            <option value="">-- Pilih Mesin --</option>
+                            @foreach($mesins as $mesin)
+                                <option value="{{ $mesin->id }}">{{ $mesin->nama_mesin }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Export PDF</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @push('styles')
@@ -196,10 +242,39 @@
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
+    // Plugin sorting date-eu agar DataTables paham format "01 Jan 2024"
+jQuery.extend(jQuery.fn.dataTable.ext.type.order, {
+    "date-eu-pre": function (date) {
+        if (date == null || date == "") return 0;
+        var parts = date.split(' ');
+        if (parts.length < 3) return 0;
+
+        var day = parseInt(parts[0], 10);
+        var monthStr = parts[1];
+        var year = parseInt(parts[2], 10);
+
+        // Mapping bulan Indonesia/Inggris ke angka
+        var bulan = {
+            "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "Mei": 5, "May": 5, "Jun": 6, "Jul": 7, "Agu": 8, "Aug": 8,
+            "Sep": 9, "Okt": 10, "Oct": 10, "Nov": 11, "Des": 12, "Dec": 12
+        };
+
+        var month = bulan[monthStr] || 0;
+        return (year * 10000) + (month * 100) + day;
+    }
+});
+
     $(document).ready(function () {
         $('#dataTable').DataTable({
             responsive: true,
             scrollX: true,
+            order: [[2, 'asc']], // kolom ke-2 = Tanggal
+    columnDefs: [
+        {
+            targets: 2, // index kolom tanggal
+            type: 'date-eu' // format tanggal 01 Jan 2024
+        }
+    ],
             language: {
                 search: "Cari:",
                 lengthMenu: "Tampilkan _MENU_ data per halaman",

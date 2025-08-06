@@ -18,7 +18,7 @@
             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarDropdown" role="button"
                data-bs-toggle="dropdown" aria-expanded="false">
                 <span class="text-white">
-                    Hi, {{ auth()->check() ? ucfirst(auth()->user()->role) : 'Admin' }}!
+                    Hi, {{ auth()->check() ? ucfirst(auth()->user()->name) : 'Regu Mekanik' }}!
                 </span>
                 <img src="{{ auth()->user()->photo ?? asset('images/default-avatar.png') }}"
                      alt="Profile"

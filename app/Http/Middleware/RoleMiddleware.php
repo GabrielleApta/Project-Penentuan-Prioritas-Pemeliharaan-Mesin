@@ -8,9 +8,23 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, $role)
+    /**
+     * Handle an incoming request.
+     *
+     * Bisa dipakai seperti:
+     *   ->middleware('role:regu_mekanik')
+     *   ->middleware('role:regu_mekanik,koordinator_mekanik')
+     */
+    public function handle(Request $request, Closure $next, ...$roles)
     {
-        if (!Auth::check() || Auth::user()->role !== $role) {
+        if (!Auth::check()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $userRole = Auth::user()->role;
+
+        // cek apakah role user ada di daftar roles yang diijinkan
+        if (!in_array($userRole, $roles)) {
             abort(403, 'Unauthorized');
         }
 

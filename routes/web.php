@@ -40,10 +40,18 @@ Route::controller(RegisteredUserController::class)->group(function () {
 // 🔐 Protected routes
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // 🏠 Dashboard
+    // 🏠 Dashboard umum
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::middleware('role:admin')->get('/admin/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
-    Route::middleware('role:user')->get('/user/dashboard', [DashboardController::class, 'userDashboard'])->name('user.dashboard');
+
+    // Dashboard khusus untuk regu mekanik
+    Route::middleware('role:regu_mekanik')
+        ->get('/regu/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard.index');
+
+    // Dashboard khusus untuk koordinator mekanik
+    Route::middleware('role:koordinator_mekanik')
+        ->get('/koordinator/dashboard', [DashboardController::class, 'userDashboard'])
+        ->name('user.dashboard');
 
     // 🔧 Mesin
     Route::resource('mesin', MesinController::class)->except(['show']);
@@ -55,21 +63,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/twisting', [MesinController::class, 'twisting'])->name('twisting');
         Route::get('/aktif', [MesinController::class, 'Aktif'])->name('aktif');
         Route::get('/tidak-aktif', [MesinController::class, 'TidakAktif'])->name('tidakaktif');
-
     });
 
     // 📉 Depresiasi
     Route::prefix('depresiasi')->name('depresiasi.')->group(function () {
-    Route::get('/', [DepresiasiController::class, 'index'])->name('index');
-    Route::post('/hitung', [DepresiasiController::class, 'hitung'])->name('hitung');
-    Route::post('/simpan', [DepresiasiController::class, 'simpanKeRiwayat'])->name('simpan');
-    Route::get('/reset', [DepresiasiController::class, 'reset'])->name('reset');
-    Route::get('/grafik', [DepresiasiController::class, 'grafik'])->name('grafik');
-    Route::get('/export-excel', [DepresiasiController::class, 'exportExcel'])->name('exportExcel');
-    Route::get('/export-pdf', [DepresiasiController::class, 'exportPdf'])->name('exportPdf');
-    Route::get('/{mesin_id}', [DepresiasiController::class, 'show'])->name('show');
-});
-
+        Route::get('/', [DepresiasiController::class, 'index'])->name('index');
+        Route::post('/hitung', [DepresiasiController::class, 'hitung'])->name('hitung');
+        Route::post('/simpan', [DepresiasiController::class, 'simpanKeRiwayat'])->name('simpan');
+        Route::get('/reset', [DepresiasiController::class, 'reset'])->name('reset');
+        Route::get('/grafik', [DepresiasiController::class, 'grafik'])->name('grafik');
+        Route::get('/export-excel', [DepresiasiController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('/export-pdf', [DepresiasiController::class, 'exportPdf'])->name('exportPdf');
+        Route::get('/{mesin_id}', [DepresiasiController::class, 'show'])->name('show');
+    });
 
     // 🔥 Prioritas SAW
     Route::prefix('prioritas')->name('prioritas.')->group(function () {
@@ -82,13 +88,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/print-pdf', [PrioritasController::class, 'printPDF'])->name('printPDF');
         Route::get('/{mesin_id}/detail/pdf', [PrioritasController::class, 'detailPDF'])->name('detailPDF');
         Route::get('/grafik/saw', [PrioritasController::class, 'grafikSaw'])->name('grafik.saw');
-
     });
 
     // 📊 Kriteria
     Route::resource('kriteria', KriteriaController::class)
-    ->parameters(['kriteria' => 'kriteria']) // 💡 tambahkan baris ini
-    ->except(['show']);
+        ->parameters(['kriteria' => 'kriteria'])
+        ->except(['show']);
 
     // 📝 Penilaian Mesin
     Route::prefix('penilaian')->name('penilaian.')->group(function () {
@@ -97,7 +102,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/store', [PenilaianMesinController::class, 'store'])->name('store');
         Route::put('/{id}', [PenilaianMesinController::class, 'update'])->name('update');
         Route::delete('/{id}', [PenilaianMesinController::class, 'destroy'])->name('destroy');
-
         Route::post('/generate', [PenilaianMesinController::class, 'generatePenilaian'])->name('generate');
         Route::get('/normalisasi', [PenilaianMesinController::class, 'normalisasi'])->name('normalisasi');
         Route::get('/export-excel', [PenilaianMesinController::class, 'exportExcel'])->name('exportExcel');
@@ -112,37 +116,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('kerusakan-tahunan/export-pdf', [KerusakanTahunanController::class, 'exportPDF'])->name('kerusakan-tahunan.pdf');
     Route::post('/kerusakan-tahunan/export-pdf-filter', [KerusakanTahunanController::class, 'exportPdfFiltered'])->name('kerusakan-tahunan.exportPdfFiltered');
 
+    // 📅 Jadwal Pemeliharaan
     Route::prefix('jadwal')->group(function () {
-    Route::get('/', [JadwalPemeliharaanController::class, 'index'])->name('jadwal.index');
-    Route::get('/create', [JadwalPemeliharaanController::class, 'create'])->name('jadwal.create');
-    Route::post('/', [JadwalPemeliharaanController::class, 'store'])->name('jadwal.store');
-    Route::get('/generate/saw', [JadwalPemeliharaanController::class, 'generateDariSAW'])->name('jadwal.generate.saw');
-    Route::patch('/jadwal/{id}/status', [JadwalPemeliharaanController::class, 'updateStatus'])->name('jadwal.updateStatus');
-    Route::get('/jadwal/export-pdf', [JadwalPemeliharaanController::class, 'cetakJadwalPDF'])->name('jadwal.printPDF');
+        Route::get('/', [JadwalPemeliharaanController::class, 'index'])->name('jadwal.index');
+        Route::get('/create', [JadwalPemeliharaanController::class, 'create'])->name('jadwal.create');
+        Route::post('/', [JadwalPemeliharaanController::class, 'store'])->name('jadwal.store');
+        Route::get('/generate/saw', [JadwalPemeliharaanController::class, 'generateDariSAW'])->name('jadwal.generate.saw');
+        Route::patch('/jadwal/{id}/status', [JadwalPemeliharaanController::class, 'updateStatus'])->name('jadwal.updateStatus');
+        Route::get('/jadwal/export-pdf', [JadwalPemeliharaanController::class, 'cetakJadwalPDF'])->name('jadwal.printPDF');
+    });
 
-});
-
-
-Route::resource('history-pemeliharaan', HistoryPemeliharaanController::class);
-
-
-Route::prefix('riwayat/straight-line')->name('riwayat.straight-line.')->group(function () {
-    Route::get('/', [RiwayatStraightLineController::class, 'index'])->name('index');
-    Route::post('/simpan', [RiwayatStraightLineController::class, 'simpan'])->name('simpan');
-    Route::get('/detail/{kode}', [RiwayatStraightLineController::class, 'detail'])->name('detail');
-    Route::delete('/destroy/{kode}', [RiwayatStraightLineController::class, 'destroy'])->name('destroy');
-});
-
-Route::prefix('riwayat-saw')->group(function () {
-    Route::get('/', [RiwayatSawController::class, 'index'])->name('riwayat-saw.index');
-    Route::post('/simpan', [RiwayatSawController::class, 'store'])->name('riwayat-saw.store');
-    Route::get('/detail/{kode}', [RiwayatSawController::class, 'show'])->name('riwayat-saw.show');
-    Route::delete('/{kode}', [RiwayatSawController::class, 'destroy'])->name('riwayat-saw.destroy');
-
-});
+    Route::resource('history-pemeliharaan', HistoryPemeliharaanController::class);
+    Route::post('/history-pemeliharaan/export-pdf-filtered', [HistoryPemeliharaanController::class, 'exportPdfFiltered'])
+    ->name('history-pemeliharaan.exportPdfFiltered');
 
 
+    Route::prefix('riwayat/straight-line')->name('riwayat.straight-line.')->group(function () {
+        Route::get('/', [RiwayatStraightLineController::class, 'index'])->name('index');
+        Route::post('/simpan', [RiwayatStraightLineController::class, 'simpan'])->name('simpan');
+        Route::get('/detail/{kode}', [RiwayatStraightLineController::class, 'detail'])->name('detail');
+        Route::delete('/destroy/{kode}', [RiwayatStraightLineController::class, 'destroy'])->name('destroy');
+    });
 
+    Route::prefix('riwayat-saw')->group(function () {
+        Route::get('/', [RiwayatSawController::class, 'index'])->name('riwayat-saw.index');
+        Route::post('/simpan', [RiwayatSawController::class, 'store'])->name('riwayat-saw.store');
+        Route::get('/detail/{kode}', [RiwayatSawController::class, 'show'])->name('riwayat-saw.show');
+        Route::delete('/{kode}', [RiwayatSawController::class, 'destroy'])->name('riwayat-saw.destroy');
+    });
 
     // 📑 Laporan
     Route::prefix('laporan')->name('laporan.')->group(function () {
@@ -157,20 +158,21 @@ Route::prefix('riwayat-saw')->group(function () {
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
     });
 
-    // 👥 Manajemen User (admin only)
-    Route::middleware('role:admin')->prefix('users')->name('users.')->group(function () {
-        Route::get('/', [UserController::class, 'index'])->name('index');
-        Route::get('/create', [UserController::class, 'create'])->name('create');
-        Route::post('/', [UserController::class, 'store'])->name('store');
-        Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
-        Route::patch('/{user}', [UserController::class, 'update'])->name('update');
-        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
-    });
+    // 👥 Manajemen User (hanya untuk regu mekanik)
+    Route::middleware('role:regu_mekanik')
+        ->prefix('users')
+        ->name('users.')
+        ->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::get('/create', [UserController::class, 'create'])->name('create');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
+            Route::patch('/{user}', [UserController::class, 'update'])->name('update');
+            Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+        });
 
-
-Route::get('/dashboard/top-depresiasi', [DashboardController::class, 'ajaxTopDepresiasi'])->name('dashboard.top-depresiasi');
+    Route::get('/dashboard/top-depresiasi', [DashboardController::class, 'ajaxTopDepresiasi'])->name('dashboard.top-depresiasi');
 });
 
-
-// 🔂 Auth tambahan (Laravel Breeze / Fortify)
+// 🔂 Auth tambahan
 require __DIR__ . '/auth.php';

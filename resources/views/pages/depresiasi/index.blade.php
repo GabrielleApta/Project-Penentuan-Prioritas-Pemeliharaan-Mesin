@@ -26,7 +26,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Perhitungan Penyusutan Mesin</div>
         <div>
-            @if(auth()->user()->role === 'admin')
+            @if(auth()->user()->role === 'regu_mekanik')
                 <a href="{{ route('depresiasi.reset') }}" class="btn btn-primary btn-sm"
                     onclick="return confirm('Yakin ingin mereset semua data depresiasi?')">
                     <i class="fas fa-sync-alt"></i> Hitung Ulang

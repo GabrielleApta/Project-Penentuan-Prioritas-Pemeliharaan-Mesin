@@ -36,8 +36,8 @@
                         <option value="cost" {{ old('jenis_kriteria') == 'cost' ? 'selected' : '' }}>Cost</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Simpan</button>
-                <a href="{{ route('kriteria.index') }}" class="btn btn-secondary">Batal</a>
+                <button type="submit" class="btn btn-primary btn-sm mt-3">Simpan</button>
+                <a href="{{ route('kriteria.index') }}" class="btn btn-secondary btn-sm mt-3">Batal</a>
             </form>
         </div>
     </div>

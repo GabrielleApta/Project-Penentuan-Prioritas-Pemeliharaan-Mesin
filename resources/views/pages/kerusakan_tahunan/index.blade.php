@@ -39,7 +39,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Kerusakan Tahunan</div>
         <div>
-            @if(auth()->user()->role === 'admin')
+            @if(auth()->user()->role === 'regu_mekanik')
             <a href="{{ route('kerusakan-tahunan.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Tambah Data
                 </a>
@@ -68,44 +68,58 @@
                             <th>Downtime Ringan (jam)</th>
                             <th>Kerusakan Parah</th>
                             <th>Downtime Parah (jam)</th>
-                            @if(auth()->user()->role === 'admin')
+                            @if(auth()->user()->role === 'regu_mekanik')
                                 <th class="text-center">Aksi</th>
                             @endif
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($data as $index => $item)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td class="text-start">{{ $item->mesin->nama_mesin }}</td>
-                                <td>{{ $item->tahun }}</td>
-                                <td>{{ $item->kerusakan_ringan }}</td>
-                                <td>{{ number_format($item->downtime_ringan, 1, ',', '.') }}</td>
-                                <td>{{ $item->kerusakan_parah }}</td>
-                                <td>{{ number_format($item->downtime_parah, 1, ',', '.') }}</td>
-                                @if(auth()->user()->role === 'admin')
-                                    <td class="text-nowrap">
-                                        <div class="d-flex gap-2">
-                                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditKerusakan{{ $item->id }}">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button>
-                                            <form action="{{ route('kerusakan-tahunan.destroy', $item->id) }}" method="POST" class="d-inline formHapusKerusakan">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm btnHapusKerusakan">
-                                                    <i class="fas fa-trash-alt"></i> Hapus
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                @endif
-                            </tr>
-                        @endforeach
-
                         @if ($data->isEmpty())
                             <tr>
-                                <td colspan="8" class="text-center">Belum ada data kerusakan tahunan.</td>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    Tidak ada data kerusakan tahunan.
+                                </td>
                             </tr>
+                        @else
+                            @foreach ($data as $index => $item)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td class="text-start">
+                                        @if($item->mesin)
+                                            {{ $item->mesin->nama_mesin }}
+                                        @else
+                                            <span class="text-muted fst-italic">Mesin telah dihapus</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $item->tahun }}</td>
+                                    <td>{{ $item->kerusakan_ringan }}</td>
+                                    <td>{{ number_format($item->downtime_ringan, 1, ',', '.') }}</td>
+                                    <td>{{ $item->kerusakan_parah }}</td>
+                                    <td>{{ number_format($item->downtime_parah, 1, ',', '.') }}</td>
+                                    @if(auth()->user()->role === 'regu_mekanik')
+                                        <td class="text-nowrap">
+                                            <div class="d-flex gap-2">
+                                                @if($item->mesin)
+                                                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditKerusakan{{ $item->id }}">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                @else
+                                                    <button class="btn btn-warning btn-sm" disabled title="Tidak bisa edit karena mesin sudah dihapus">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                @endif
+                                                <form action="{{ route('kerusakan-tahunan.destroy', $item->id) }}" method="POST" class="d-inline formHapusKerusakan">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger btn-sm btnHapusKerusakan">
+                                                        <i class="fas fa-trash-alt"></i> Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    @endif
+                                </tr>
+                            @endforeach
                         @endif
                     </tbody>
                 </table>
@@ -172,58 +186,60 @@
     </div>
 </div>
 
-{{-- Modal Edit (semua dipindah ke luar tabel) --}}
+{{-- Modal Edit (hanya untuk yang mesinnya masih ada) --}}
 @foreach ($data as $item)
-    <div class="modal fade" id="modalEditKerusakan{{ $item->id }}" tabindex="-1" aria-labelledby="editKerusakanLabel{{ $item->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <form action="{{ route('kerusakan-tahunan.update', $item->id) }}" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="modal-content shadow">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editKerusakanLabel{{ $item->id }}">Edit Data: {{ $item->mesin->nama_mesin }} ({{ $item->tahun }})</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" value="{{ $item->mesin->nama_mesin }}" disabled>
-                                    <label>Nama Mesin</label>
+    @if($item->mesin)
+        <div class="modal fade" id="modalEditKerusakan{{ $item->id }}" tabindex="-1" aria-labelledby="editKerusakanLabel{{ $item->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <form action="{{ route('kerusakan-tahunan.update', $item->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-content shadow">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editKerusakanLabel{{ $item->id }}">Edit Data: {{ $item->mesin->nama_mesin }} ({{ $item->tahun }})</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" value="{{ $item->mesin->nama_mesin }}" disabled>
+                                        <label>Nama Mesin</label>
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" name="tahun" value="{{ $item->tahun }}" required>
+                                        <label>Tahun</label>
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" name="kerusakan_ringan" value="{{ $item->kerusakan_ringan }}" required>
+                                        <label>Kerusakan Ringan</label>
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" name="downtime_ringan" value="{{ $item->downtime_ringan }}" required>
+                                        <label>Downtime Ringan (jam)</label>
+                                    </div>
                                 </div>
-                                <div class="form-floating mb-3">
-                                    <input type="number" class="form-control" name="tahun" value="{{ $item->tahun }}" required>
-                                    <label>Tahun</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="number" class="form-control" name="kerusakan_ringan" value="{{ $item->kerusakan_ringan }}" required>
-                                    <label>Kerusakan Ringan</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="number" class="form-control" name="downtime_ringan" value="{{ $item->downtime_ringan }}" required>
-                                    <label>Downtime Ringan (jam)</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <input type="number" class="form-control" name="kerusakan_parah" value="{{ $item->kerusakan_parah }}" required>
-                                    <label>Kerusakan Parah</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="number" class="form-control" name="downtime_parah" value="{{ $item->downtime_parah }}" required>
-                                    <label>Downtime Parah (jam)</label>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" name="kerusakan_parah" value="{{ $item->kerusakan_parah }}" required>
+                                        <label>Kerusakan Parah</label>
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" name="downtime_parah" value="{{ $item->downtime_parah }}" required>
+                                        <label>Downtime Parah (jam)</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-warning">Update</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-warning">Update</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
+    @endif
 @endforeach
 @endsection
 

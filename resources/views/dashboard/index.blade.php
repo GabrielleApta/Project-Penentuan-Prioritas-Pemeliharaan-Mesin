@@ -9,18 +9,17 @@
         @php
             $cards = [
                 ['color' => 'primary', 'label' => 'Total Mesin', 'value' => $totalMesin, 'route' => 'mesin.index'],
-                ['color' => 'dark', 'label' => 'Kerusakan Ringan 2024', 'value' => $frekuensiRingan, 'route' => 'kerusakan-tahunan.index'],
-                ['color' => 'secondary', 'label' => 'Kerusakan Parah 2024', 'value' => $frekuensiParah, 'route' => 'kerusakan-tahunan.index'],
-                ['color' => 'info', 'label' => 'Rekapan Histori 2024', 'value' => $totalPemeliharaan, 'route' => 'kerusakan-tahunan.index'],
-                ['color' => 'danger', 'label' => 'Paling Sering Rusak', 'value' => "$mesinTerbanyakRusak ($jumlahKerusakanTerbanyak ×)", 'route' => 'kerusakan-tahunan.index']
+                ['color' => 'dark', 'label' => 'Total Kerusakan Ringan 2024', 'value' => $frekuensiRingan, 'route' => 'kerusakan-tahunan.index'],
+                ['color' => 'secondary', 'label' => 'Total Kerusakan Parah 2024', 'value' => $frekuensiParah, 'route' => 'kerusakan-tahunan.index'],
+                ['color' => 'info', 'label' => 'Total Rekapan Histori 2024', 'value' => $totalPemeliharaan, 'route' => 'kerusakan-tahunan.index'],
             ];
         @endphp
 
         @foreach ($cards as $card)
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card bg-{{ $card['color'] }} text-white shadow">
+            <div class="card bg-{{ $card['color'] }} text-white shadow h-100 d-flex flex-column">
                 <div class="card-body">{{ $card['label'] }}: {{ $card['value'] }}</div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
+                <div class="card-footer d-flex align-items-center justify-content-between mt-auto">
                     <a class="small text-white stretched-link" href="{{ route($card['route']) }}">View Details</a>
                     <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                 </div>
@@ -143,22 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const ctxSaw = document.getElementById("hasilSawChart").getContext("2d");
     const labelsSaw = @json($labelsSaw ?? []);
     const dataSaw = @json($dataSaw ?? []);
-    Chart.register({
-    id: 'labelOnTop',
-    afterDatasetsDraw(chart) {
-        const { ctx } = chart;
-        chart.data.datasets.forEach((dataset, i) => {
-            const meta = chart.getDatasetMeta(i);
-            meta.data.forEach((bar, index) => {
-                const value = dataset.data[index];
-                ctx.fillStyle = '#000';
-                ctx.font = 'bold 12px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(`#${index + 1}`, bar.x, bar.y - 5);
-            });
-        });
-    }
-});
+
 
     new Chart(ctxSaw, {
         type: 'bar',
@@ -191,7 +175,7 @@ borderColor: dataSaw.map((val, idx) =>
                     }
                 },
                 legend: { display: false }
-                 labelOnTop: true
+
             },
             scales: {
                 x: {

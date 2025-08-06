@@ -27,7 +27,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Penilaian Mesin</div>
         <div>
-            @if(auth()->user()->role === 'admin')
+            @if(auth()->user()->role === 'regu_mekanik')
             <form action="{{ route('penilaian.generate') }}" method="POST" class="d-inline">
         @csrf
         <button type="submit" class="btn btn-primary btn-sm"

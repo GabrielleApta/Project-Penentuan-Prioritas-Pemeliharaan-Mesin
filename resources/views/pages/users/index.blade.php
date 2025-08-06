@@ -1,131 +1,88 @@
 @extends('layouts.app')
 
-@section('title', 'Kelola User')
+@section('title', 'Kelola Data User')
 
 @section('content')
-<div class="container-fluid px-4">
+<div class="container-fluid px-2">
     <h1 class="mt-4">Kelola Data User</h1>
 
-    @if(session('success'))
-        <div class="alert alert-success mt-2">{{ session('success') }}</div>
-    @endif
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Data User</li>
+    </ol>
 
-    @if(session('error'))
-        <div class="alert alert-danger mt-2">{{ session('error') }}</div>
-    @endif
-
-    <div class="card mt-3">
-        <div class="card-header">Daftar User</div>
+    <div class="card mb-4">
         <div class="card-body">
-            <table class="table table-bordered table-hover">
-                <thead>
-                    <tr>
-                        <th>Nama</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th width="20%">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($users as $user)
-                        <tr>
-                            <td>{{ $user->name }}</td>
-                            <td>{{ $user->email }}</td>
-                            <td>{{ ucfirst($user->role) }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                                    data-bs-target="#editRoleModal{{ $user->id }}">
-                                    Edit Role
-                                </button>
+        </div>
+    </div>
 
-                                <form action="{{ route('users.destroy', $user) }}" method="POST"
-                                    class="d-inline form-delete-user">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
-                                </form>
-                            </td>
-                        </tr>
+    <div class="card shadow mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div><i class="fas fa-users me-1"></i> Tabel Data Pengguna</div>
+            <div class="d-flex flex-wrap gap-2 justify-content-end">
+            </div>
+        </div>
 
-                        {{-- Modal untuk Edit Role --}}
-                        <div class="modal fade" id="editRoleModal{{ $user->id }}" tabindex="-1"
-                            aria-labelledby="editRoleModalLabel{{ $user->id }}" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <form action="{{ route('users.update', $user) }}" method="POST" class="form-edit-role">
-                                        @csrf
-                                        @method('PATCH')
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="editRoleModalLabel{{ $user->id }}">
-                                                Edit Role: {{ $user->name }}
-                                            </h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <select name="role" class="form-select">
-                                                <option value="user" {{ $user->role === 'user' ? 'selected' : '' }}>User</option>
-                                                <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
-                                            </select>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary"
-                                                data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-primary btn-confirm-edit">
-                                                Simpan Perubahan
+        <div class="card-body">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+                </div>
+            @endif
+
+            @if ($users->isEmpty())
+                <div class="alert alert-warning">Belum ada pengguna terdaftar.</div>
+            @else
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle" id="dataTable">
+                        <thead class="thead-dark text-center">
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-center">
+                            @foreach ($users as $user)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td class="text-start">{{ $user->name }}</td>
+                                    <td class="text-start">{{ $user->email }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ $user->role === 'admin' ? 'primary' : 'secondary' }}">
+                                            {{ ucfirst($user->role) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-warning me-1">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+
+                                        <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash-alt"></i> Hapus
                                             </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <tr><td colspan="4" class="text-center">Belum ada user lain.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    // Konfirmasi hapus
-    document.querySelectorAll('.form-delete-user').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Yakin ingin menghapus user ini?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
-        });
-    });
-
-    // Konfirmasi edit role
-    document.querySelectorAll('.form-edit-role').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Yakin ingin mengubah role user?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, simpan!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
-        });
-    });
-</script>
-@endpush

@@ -16,7 +16,12 @@ class KerusakanTahunanController extends Controller
 {
     public function index()
     {
-        $data = KerusakanTahunan::with('mesin')->latest()->get();
+        // Hanya tampilkan data yang mesinnya masih ada
+        $data = KerusakanTahunan::with('mesin')
+            ->whereHas('mesin') // Filter hanya yang punya relasi mesin
+            ->latest()
+            ->get();
+
         return view('pages.kerusakan_tahunan.index', compact('data'));
     }
 
@@ -128,73 +133,84 @@ class KerusakanTahunanController extends Controller
 
         return view('pages.kerusakan_tahunan.rata-rata', compact('hasil'));
     }
+
     public function showImportForm()
-{
-    return view('kerusakan.import');
-}
-
-public function import(Request $request)
-{
-    $request->validate([
-        'file' => 'required|file|mimes:xls,xlsx,csv'
-    ]);
-
-    try {
-        Excel::import(new KerusakanTahunanImport, $request->file('file'));
-        return redirect()->back()->with('import_success', 'Data berhasil diimpor.');
-    } catch (\Exception $e) {
-        return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan: ' . $e->getMessage()]);
-    }
-}
-public function exportPdfFiltered(Request $request)
-{
-    $request->validate([
-        'tahun' => 'nullable|integer',
-        'mesin_id' => 'nullable|exists:mesin,id',
-    ]);
-
-    $query = KerusakanTahunan::with('mesin');
-    $namaMesin = null;
-
-    if ($request->filled('tahun')) {
-        $query->where('tahun', $request->tahun);
+    {
+        return view('kerusakan.import');
     }
 
-    if ($request->filled('mesin_id')) {
-        $query->where('mesin_id', $request->mesin_id);
-        $mesin = Mesin::find($request->mesin_id);
-        $namaMesin = $mesin ? $mesin->nama_mesin : null;
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xls,xlsx,csv'
+        ]);
+
+        try {
+            Excel::import(new KerusakanTahunanImport, $request->file('file'));
+            return redirect()->back()->with('import_success', 'Data berhasil diimpor.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
     }
 
-    $data = $query->get();
+    public function exportPdfFiltered(Request $request)
+    {
+        $request->validate([
+            'tahun' => 'nullable|integer',
+            'mesin_id' => 'nullable|exists:mesin,id',
+        ]);
 
-    // Generate Nama File
-    $filename = 'Laporan Kerusakan';
+        // Hanya tampilkan data yang mesinnya masih ada
+        $query = KerusakanTahunan::with('mesin')->whereHas('mesin');
+        $namaMesin = null;
 
-    if ($request->filled('tahun') && $namaMesin) {
-        $filename .= ' ' . Str::slug($namaMesin, '_') . ' Tahun ' . $request->tahun;
-    } elseif ($request->filled('tahun')) {
-        $filename .= ' Tahun ' . $request->tahun;
-    } elseif ($namaMesin) {
-        $filename .= ' ' . Str::slug($namaMesin, '_');
+        if ($request->filled('tahun')) {
+            $query->where('tahun', $request->tahun);
+        }
+
+        if ($request->filled('mesin_id')) {
+            $query->where('mesin_id', $request->mesin_id);
+            $mesin = Mesin::find($request->mesin_id);
+            $namaMesin = $mesin ? $mesin->nama_mesin : null;
+        }
+
+        $data = $query->get();
+
+        // Generate Nama File
+        $filename = 'Laporan Kerusakan';
+
+        if ($request->filled('tahun') && $namaMesin) {
+            $filename .= ' ' . Str::slug($namaMesin, '_') . ' Tahun ' . $request->tahun;
+        } elseif ($request->filled('tahun')) {
+            $filename .= ' Tahun ' . $request->tahun;
+        } elseif ($namaMesin) {
+            $filename .= ' ' . Str::slug($namaMesin, '_');
+        }
+
+        $filename .= '.pdf';
+
+        // Load PDF view
+        $pdf = Pdf::loadView('pages.kerusakan_tahunan.pdf_filtered', [
+            'data' => $data,
+            'tahun' => $request->tahun,
+            'namaMesin' => $namaMesin,
+            'pdf' => true,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream($filename);
     }
 
-    $filename .= '.pdf';
-
-    // Load PDF view
-    $pdf = Pdf::loadView('pages.kerusakan_tahunan.pdf_filtered', [
-        'data' => $data,
-        'tahun' => $request->tahun,
-        'namaMesin' => $namaMesin,
-        'pdf' => true,
-    ])->setPaper('a4', 'landscape');
-
-    return $pdf->stream($filename);
-}
-
-public function exportExcel()
+    public function exportExcel()
     {
         return Excel::download(new KerusakanTahunanExport, 'kerusakan_tahunan.xlsx');
     }
 
+    // Method untuk cleanup data orphan (opsional)
+    public function cleanupOrphanData()
+    {
+        $deletedCount = KerusakanTahunan::whereDoesntHave('mesin')->delete();
+
+        return redirect()->route('kerusakan-tahunan.index')
+            ->with('success', "Berhasil membersihkan {$deletedCount} data yang tidak valid");
+    }
 }

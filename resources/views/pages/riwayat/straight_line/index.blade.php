@@ -3,37 +3,76 @@
 @section('title', 'Riwayat Perhitungan Straight Line')
 
 @section('content')
-<div class="container mt-4">
-    <h2>Riwayat Perhitungan Straight Line</h2>
+<div class="container-fluid px-2">
+    <h1 class="mt-4">Riwayat Perhitungan Penyusutan Mesin</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Riwayat Perhitungan Straight Line</li>
+    </ol>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="alert alert-info d-flex align-items-start">
+                <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
+                <div>
+                    <strong>Informasi:</strong><br>
+                    Riwayat ini berisi hasil perhitungan penyusutan aset mesin menggunakan metode <strong>Straight Line</strong>.<br>
+                    Anda dapat melihat detail tiap perhitungan atau menghapus riwayat yang tidak dibutuhkan.
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th class="text-center">Kode Perhitungan</th>
-                <th class="text-center">Tanggal</th>
-                <th class="text-center">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($riwayats as $r)
-                <tr>
-                    <td class="text-center">{{ $r->kode_perhitungan }}</td>
-                    <td class="text-center">{{ \Carbon\Carbon::parse($r->created_at)->format('d M Y H:i') }}</td>
-                    <td class="text-center">
-                        <a href="{{ route('riwayat.straight-line.detail', $r->kode_perhitungan) }}" class="btn btn-info btn-sm">Detail</a>
-                        <form action="{{ route('riwayat.straight-line.destroy', $r->kode_perhitungan) }}" method="POST" class="d-inline"
-                            onsubmit="return confirm('Yakin ingin menghapus riwayat ini?')">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-danger btn-sm">Hapus</button>
-                        </form>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+    <div class="card shadow mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div><i class="fas fa-table me-1"></i> Tabel Riwayat Perhitungan Straight Line</div>
+            <div class="d-flex flex-wrap gap-2 justify-content-end">
+            </div>
+        </div>
+
+        <div class="card-body">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+                </div>
+            @endif
+
+            @if($riwayats->isEmpty())
+                <div class="alert alert-warning">Belum ada data riwayat perhitungan Straight Line.</div>
+            @else
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable">
+                        <thead class="thead-dark text-center">
+                            <tr>
+                                <th>Kode Perhitungan</th>
+                                <th>Tanggal</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-center">
+                            @foreach($riwayats as $r)
+                                <tr>
+                                    <td>{{ $r->kode_perhitungan }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($r->created_at)->format('d M Y H:i') }}</td>
+                                    <td>
+                                        <a href="{{ route('riwayat.straight-line.detail', $r->kode_perhitungan) }}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i> Detail
+                                        </a>
+                                        <form action="{{ route('riwayat.straight-line.destroy', $r->kode_perhitungan) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus riwayat ini?')">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash-alt"></i> Hapus
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
 </div>
 @endsection

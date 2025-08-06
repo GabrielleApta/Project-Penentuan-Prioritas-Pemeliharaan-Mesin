@@ -21,7 +21,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-calendar-alt me-1"></i> Tabel Jadwal Pemeliharaan</div>
                 <div>
-                    @if(auth()->user()->role === 'admin')
+                    @if(auth()->user()->role === 'regu_mekanik')
                     <a href="{{ route('jadwal.create') }}" class="btn btn-success btn-sm">
                         <i class="fas fa-plus"></i> Tambah Manual
                     </a>
@@ -29,11 +29,12 @@
                        onclick="return confirm('Generate otomatis dari skor SAW?')">
                         <i class="fas fa-magic"></i> Generate Otomatis
                     </a>
+
+                    @endif
                     {{-- Tambah tombol input histori --}}
                     <a href="{{ route('history-pemeliharaan.index') }}" class="btn btn-success btn-sm">
                         <i class="fas fa-history"></i> Lihat Histori Pemeliharaan
                     </a>
-                    @endif
                     <a href="{{ route('jadwal.printPDF') }}" class="btn btn-danger btn-sm" target="_blank">
                         <i class="fas fa-file-pdf"></i> Export PDF
                     </a>

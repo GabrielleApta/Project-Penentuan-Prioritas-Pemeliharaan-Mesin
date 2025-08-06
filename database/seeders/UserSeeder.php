@@ -8,20 +8,31 @@ use App\Models\User;
 
 class UserSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Jalankan seeder database.
+     */
+    public function run(): void
     {
-        User::create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('admin'),
-            'role' => 'admin'
-        ]);
+        // Buat Regu Mekanik
+        User::updateOrCreate(
+            ['email' => 'regumekanik@gmail.com'],
+            [
+                'name' => 'Regu Mekanik',
+                'password' => Hash::make('regumekanik'),
+                'role' => 'regu_mekanik',
+                'photo' => null,
+            ]
+        );
 
-        User::create([
-            'name' => 'User',
-            'email' => 'user@example.com',
-            'password' => Hash::make('user'),
-            'role' => 'user'
-        ]);
+        // Buat Koordinator Mekanik
+        User::updateOrCreate(
+            ['email' => 'koordinatormekanik@gmail.com'],
+            [
+                'name' => 'Koordinator Mekanik',
+                'password' => Hash::make('koordinatormekanik'),
+                'role' => 'koordinator_mekanik',
+                'photo' => null,
+            ]
+        );
     }
 }

@@ -97,12 +97,12 @@
 <body>
     <div class="container-auth">
         <div class="auth-form">
-            <h3>@yield('auth-title', 'Selamat Datang Kembali!')</h3>
+            <h3>@yield('auth-title', 'Login')</h3>
             @yield('content')
         </div>
         <div class="auth-info">
             <img src="{{ asset('images/logo_arida.png') }}" alt="Logo" onerror="this.style.display='none'">
-            <h2>Sistem Informasi apaya</h2>
+            <h2>Sistem Penentuan Prioritas Pemeliharaan Mesin Produksi Benang</h2>
             <p>PT. Arteria Daya Mulia</p>
         </div>
     </div>

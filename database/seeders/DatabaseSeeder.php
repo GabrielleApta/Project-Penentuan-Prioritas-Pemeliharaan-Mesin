@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             PenilaianMesinSeeder::class,
             HasilSawSeeder::class,
             PenyusutanMesinSeeder::class,
+            HistoryPemeliharaanSeeder::class,
+
         ]);
         // \App\Models\User::factory(10)->create();
 
