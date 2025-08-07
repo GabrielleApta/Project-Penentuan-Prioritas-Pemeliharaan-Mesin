@@ -88,7 +88,7 @@ class Mesin extends Model
         parent::boot();
 
         static::deleting(function ($mesin) {
-            $mesin->penilaian()->delete();
+            $mesin->PenilaianMesin()->delete();
         });
     }
 

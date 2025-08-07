@@ -204,6 +204,7 @@
                                 <div class="col-md-6">
                                     <div class="form-floating mb-3">
                                         <input type="text" class="form-control" value="{{ $item->mesin->nama_mesin }}" disabled>
+                                        <input type="hidden" name="mesin_id" value="{{ $item->mesin->id }}">
                                         <label>Nama Mesin</label>
                                     </div>
                                     <div class="form-floating mb-3">

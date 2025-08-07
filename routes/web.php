@@ -119,6 +119,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Import Kerusakan Tahunan
     Route::prefix('kerusakan')->name('kerusakan.')->group(function () {
+        Route::get('/', [KerusakanTahunanController::class, 'index'])->name('index');
+    Route::get('/create', [KerusakanTahunanController::class, 'create'])->name('create');
+    Route::post('/', [KerusakanTahunanController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [KerusakanTahunanController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [KerusakanTahunanController::class, 'update'])->name('update');
+    Route::delete('/{id}', [KerusakanTahunanController::class, 'destroy'])->name('destroy');
         Route::get('/import', [KerusakanTahunanController::class, 'showImportForm'])->name('import.form');
         Route::post('/import', [KerusakanTahunanController::class, 'import'])->name('import');
     });
@@ -143,7 +149,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{id}', [HistoryPemeliharaanController::class, 'update'])->name('update');
         Route::delete('/{id}', [HistoryPemeliharaanController::class, 'destroy'])->name('destroy');
         Route::post('/import', [HistoryPemeliharaanController::class, 'importExcel'])->name('import');
-        
+
 
         // Export & Import
         Route::post('/export-pdf-filtered', [HistoryPemeliharaanController::class, 'exportPdfFiltered'])->name('exportPdfFiltered');

@@ -60,7 +60,12 @@
 
                             <td>{{ ucfirst($h->jenis_pemeliharaan) }}</td>
                             <td>{{ $h->deskripsi }}</td>
-                            <td>{{ $h->durasi_jam }} jam</td>
+                            <td>
+  {{ fmod($h->durasi_jam, 1) == 0
+    ? number_format($h->durasi_jam, 0, ',', '.')
+    : number_format($h->durasi_jam, 2, ',', '.')
+  }} jam
+</td>
                             <td>{{ $h->teknisi }}</td>
                             <td>
                                 @if($h->foto_bukti)
