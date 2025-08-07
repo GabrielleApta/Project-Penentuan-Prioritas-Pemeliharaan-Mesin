@@ -130,6 +130,7 @@ class MesinController extends Controller
         // 🔹 Hapus data terkait sebelum menghapus mesin
         Depresiasi::where('mesin_id', $mesin->id)->delete();
         PenilaianMesin::where('mesin_id', $mesin->id)->delete();
+        \DB::table('riwayat_straight_line')->where('mesin_id', $mesin->id)->delete();
         $mesin->delete();
 
         return redirect()->route('mesin.index')->with('success', 'Mesin berhasil dihapus!');

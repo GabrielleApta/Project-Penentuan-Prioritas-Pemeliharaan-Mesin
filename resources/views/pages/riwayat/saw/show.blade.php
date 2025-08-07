@@ -39,13 +39,13 @@
                     @foreach ($items as $item)
                         <tr class="text-center">
                             <td>{{ $loop->iteration }}</td>
-                            <td class="text-start">{{ $item->mesin->nama_mesin }}</td>
-                            <td>{{ number_format($item->akumulasi_penyusutan, 2) }}</td>
-                            <td>{{ $item->usia_mesin }}</td>
-                            <td>{{ $item->frekuensi_kerusakan }}</td>
-                            <td>{{ $item->waktu_downtime }}</td>
-                           
-                            <td>{{ number_format($item->skor_akhir, 4) }}</td>
+                            <td class="text-start">{{ $item->nama_mesin }}</td>
+                            <td>{{ $item->akumulasi_penyusutan == floor($item->akumulasi_penyusutan) ? number_format($item->akumulasi_penyusutan, 0) : $item->akumulasi_penyusutan }}</td>
+                            <td>{{ $item->usia_mesin == floor($item->usia_mesin) ? number_format($item->usia_mesin, 0) : $item->usia_mesin }}</td>
+                            <td>{{ $item->frekuensi_kerusakan == floor($item->frekuensi_kerusakan) ? number_format($item->frekuensi_kerusakan, 0) : $item->frekuensi_kerusakan }}</td>
+                            <td>{{ $item->waktu_downtime == floor($item->waktu_downtime) ? number_format($item->waktu_downtime, 0) : $item->waktu_downtime }}</td>
+
+                            <td>{{ $item->skor_akhir == floor($item->skor_akhir) ? number_format($item->skor_akhir, 0) : $item->skor_akhir }}</td>
                             <td><strong>{{ $item->ranking }}</strong></td>
                         </tr>
                     @endforeach

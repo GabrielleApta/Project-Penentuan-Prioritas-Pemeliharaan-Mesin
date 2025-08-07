@@ -11,10 +11,7 @@
         <li class="breadcrumb-item active">Data User</li>
     </ol>
 
-    <div class="card mb-4">
-        <div class="card-body">
-        </div>
-    </div>
+    
 
     <div class="card shadow mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">

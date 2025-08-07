@@ -6,19 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\Mesin;
 use App\Models\Prioritas;
 use App\Models\PenilaianMesin;
+use App\Services\NormalisasiService; // ✅ IMPORT SERVICE
 use Illuminate\Support\Facades\DB;
 use PDF;
 
 class PrioritasController extends Controller
 {
     protected $tahun = 2024;
-
-    protected $kriteria = [
-        'akumulasi_penyusutan' => ['bobot' => 0.3, 'jenis' => 'cost'],
-        'usia_mesin'           => ['bobot' => 0.3, 'jenis' => 'cost'],
-        'frekuensi_kerusakan'  => ['bobot' => 0.2, 'jenis' => 'cost'],
-        'waktu_downtime'       => ['bobot' => 0.2, 'jenis' => 'cost'],
-    ];
 
     public function __construct()
     {
@@ -38,47 +32,58 @@ class PrioritasController extends Controller
 
     public function hitungSAW()
     {
-        // Hanya ambil penilaian yang mesinnya masih ada
+        // Hanya ambil penilaian yang mesinnya masih ada - dengan CUSTOM SORTING
         $penilaian = PenilaianMesin::with('mesin')
             ->whereHas('mesin') // Filter hanya yang punya relasi mesin
             ->where('tahun_penilaian', $this->tahun)
-            ->get();
+            ->get()
+            ->sortBy(function ($item) {
+                $nama = $item->mesin->nama_mesin;
+
+                // Tentukan prioritas kategori
+                if (strpos($nama, 'Samjin') === 0) $kategori = 1;
+                elseif (strpos($nama, 'Twisting') === 0) $kategori = 2;
+                elseif (strpos($nama, 'Winder') === 0) $kategori = 3;
+                elseif (strpos($nama, 'Quick Traverse') === 0) $kategori = 4;
+                elseif (strpos($nama, 'Gulungan') === 0) $kategori = 5;
+                elseif (strpos($nama, 'Winding') === 0) $kategori = 6;
+                elseif (strpos($nama, 'Kamitsu') === 0) $kategori = 7;
+                elseif (strpos($nama, 'Vacum') === 0) $kategori = 8;
+                else $kategori = 9;
+
+                // Extract nomor dari nama mesin
+                preg_match('/\d+/', $nama, $matches);
+                $nomor = isset($matches[0]) ? (int)$matches[0] : 0;
+
+                // Return sorting key: kategori + nomor (padded) + nama
+                return sprintf('%d_%05d_%s', $kategori, $nomor, $nama);
+            })
+            ->values(); // Reset array keys
 
         if ($penilaian->isEmpty()) {
             return back()->with('error', "Data penilaian tahun {$this->tahun} belum tersedia atau semua mesin sudah dihapus.");
         }
 
-        // Ambil nilai mentah
-        $data_nilai = $penilaian->map(fn($item) => [
+        // Siapkan data untuk normalisasi - PENTING: sort by mesin_id untuk konsistensi
+        $data_nilai = $penilaian->sortBy('mesin_id')->map(fn($item) => [
             'mesin_id'             => $item->mesin_id,
             'akumulasi_penyusutan' => $item->akumulasi_penyusutan,
             'usia_mesin'           => $item->usia_mesin,
             'frekuensi_kerusakan'  => $item->frekuensi_kerusakan,
             'waktu_downtime'       => $item->waktu_downtime,
-        ])->toArray();
+        ])->values()->toArray(); // values() untuk reset array keys
 
-        // Normalisasi dinamis
-        $normalisasi = $this->normalisasi($data_nilai);
+        // ✅ GUNAKAN SERVICE UNTUK NORMALISASI
+        $normalisasi = NormalisasiService::hitungNormalisasi($data_nilai);
+        $hasil = NormalisasiService::hitungSkorAkhir($normalisasi);
 
-        // Hitung skor akhir
-        $hasil = [];
-        foreach ($normalisasi as $row) {
-            $skor = 0;
-            foreach ($this->kriteria as $key => $meta) {
-                $skor += $row[$key] * $meta['bobot'];
-            }
-            $hasil[] = [
-                'mesin_id'   => $row['mesin_id'],
-                'skor_akhir' => round($skor, 4),
-            ];
-        }
-
-        // Urutkan & ranking (semua cost → ASC)
+        // Urutkan & ranking (semua cost → ASC, nilai kecil = ranking baik)
         usort($hasil, fn($a, $b) => $a['skor_akhir'] <=> $b['skor_akhir']);
         foreach ($hasil as $i => &$row) {
             $row['rangking'] = $i + 1;
         }
 
+        // Simpan ke database
         DB::table('hasil_saw')->truncate();
         Prioritas::insert($hasil);
 
@@ -113,33 +118,55 @@ class PrioritasController extends Controller
             ->whereHas('mesin') // Pastikan mesinnya masih ada
             ->firstOrFail();
 
-        $data = $penilaian->only(array_keys($this->kriteria));
+        $data = $penilaian->only(NormalisasiService::getNamaKriteria());
         $data['mesin_id'] = $mesin_id;
 
-        // Hanya ambil data yang mesinnya masih ada untuk perhitungan normalisasi
+        // Hanya ambil data yang mesinnya masih ada untuk perhitungan normalisasi - dengan CUSTOM SORTING
         $semua = PenilaianMesin::whereHas('mesin')
             ->where('tahun_penilaian', $this->tahun)
+            ->with('mesin')
             ->get()
+            ->sortBy(function ($p) {
+                $nama = $p->mesin->nama_mesin;
+
+                // Tentukan prioritas kategori
+                if (strpos($nama, 'Samjin') === 0) $kategori = 1;
+                elseif (strpos($nama, 'Twisting') === 0) $kategori = 2;
+                elseif (strpos($nama, 'Winder') === 0) $kategori = 3;
+                elseif (strpos($nama, 'Quick Traverse') === 0) $kategori = 4;
+                elseif (strpos($nama, 'Gulungan') === 0) $kategori = 5;
+                elseif (strpos($nama, 'Winding') === 0) $kategori = 6;
+                elseif (strpos($nama, 'Kamitsu') === 0) $kategori = 7;
+                elseif (strpos($nama, 'Vacum') === 0) $kategori = 8;
+                else $kategori = 9;
+
+                // Extract nomor dari nama mesin
+                preg_match('/\d+/', $nama, $matches);
+                $nomor = isset($matches[0]) ? (int)$matches[0] : 0;
+
+                return sprintf('%d_%05d_%s', $kategori, $nomor, $nama);
+            })
             ->map(fn($p) => [
                 'mesin_id'             => $p->mesin_id,
                 'akumulasi_penyusutan' => $p->akumulasi_penyusutan,
                 'usia_mesin'           => $p->usia_mesin,
                 'frekuensi_kerusakan'  => $p->frekuensi_kerusakan,
                 'waktu_downtime'       => $p->waktu_downtime,
-            ])->toArray();
+            ])->values()->toArray(); // values() untuk reset array keys
 
-        $normal = collect($this->normalisasi($semua))->firstWhere('mesin_id', $mesin_id);
+        // ✅ GUNAKAN SERVICE
+        $normalisasiData = NormalisasiService::hitungNormalisasi($semua);
+        $normal = collect($normalisasiData)->firstWhere('mesin_id', $mesin_id);
 
-        $skor_akhir = 0;
-        foreach ($this->kriteria as $k => $meta) {
-            $skor_akhir += ($normal[$k] ?? 0) * $meta['bobot'];
-        }
+        $hasilSkor = NormalisasiService::hitungSkorAkhir([$normal]);
+        $skor_akhir = $hasilSkor[0]['skor_akhir'];
 
         return view('pages.prioritas.detail', [
             'mesin'        => $penilaian->mesin,
             'data'         => $data,
             'normalisasi'  => $normal,
-            'skor_akhir'   => round($skor_akhir, 4),
+            'skor_akhir'   => $skor_akhir,
+            'kriteria'     => NormalisasiService::$kriteria, // ✅ PASS KRITERIA KE VIEW
         ]);
     }
 
@@ -168,7 +195,7 @@ class PrioritasController extends Controller
             ->whereHas('mesin') // Pastikan mesinnya masih ada
             ->firstOrFail();
 
-        $data = $penilaian->only(array_keys($this->kriteria));
+        $data = $penilaian->only(NormalisasiService::getNamaKriteria());
         $data['mesin_id'] = $mesin_id;
 
         // Hanya ambil data yang mesinnya masih ada
@@ -183,18 +210,19 @@ class PrioritasController extends Controller
                 'waktu_downtime'       => $p->waktu_downtime,
             ])->toArray();
 
-        $normal = collect($this->normalisasi($semua))->firstWhere('mesin_id', $mesin_id);
+        // ✅ GUNAKAN SERVICE
+        $normalisasiData = NormalisasiService::hitungNormalisasi($semua);
+        $normal = collect($normalisasiData)->firstWhere('mesin_id', $mesin_id);
 
-        $skor_akhir = 0;
-        foreach ($this->kriteria as $k => $meta) {
-            $skor_akhir += ($normal[$k] ?? 0) * $meta['bobot'];
-        }
+        $hasilSkor = NormalisasiService::hitungSkorAkhir([$normal]);
+        $skor_akhir = $hasilSkor[0]['skor_akhir'];
 
         $viewData = [
             'mesin'       => $penilaian->mesin,
             'data'        => $data,
             'normalisasi' => $normal,
-            'skor_akhir'  => round($skor_akhir, 4),
+            'skor_akhir'  => $skor_akhir,
+            'kriteria'    => NormalisasiService::$kriteria,
             'pdf'         => $pdf,
         ];
 
@@ -203,33 +231,7 @@ class PrioritasController extends Controller
             : view('pages.prioritas.detail', $viewData);
     }
 
-    private function normalisasi(array $data)
-    {
-        $kriteria = [
-            'akumulasi_penyusutan' => ['bobot' => 0.3, 'jenis' => 'cost'],
-            'usia_mesin'           => ['bobot' => 0.3, 'jenis' => 'cost'],
-            'frekuensi_kerusakan'  => ['bobot' => 0.2, 'jenis' => 'cost'],
-            'waktu_downtime'       => ['bobot' => 0.2, 'jenis' => 'cost'],
-        ];
-
-        $result = [];
-
-        foreach ($kriteria as $k => $meta) {
-            $values = array_column($data, $k);
-            $extreme = $meta['jenis'] === 'benefit' ? max($values) : min($values);
-            $extreme = $extreme ?: 0.0001;
-
-            foreach ($data as $i => $row) {
-                $val = $row[$k] ?: 0.0001;
-                $norm = $meta['jenis'] === 'benefit' ? $val / $extreme : $extreme / $val;
-
-                $result[$i]['mesin_id'] = $row['mesin_id'];
-                $result[$i][$k] = $norm;
-            }
-        }
-
-        return $result;
-    }
+    // ✅ HAPUS FUNGSI NORMALISASI() YANG LAMA - UDAH PAKE SERVICE
 
     // Method untuk cleanup data prioritas orphan (opsional)
     public function cleanupOrphanData()

@@ -89,6 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/print-pdf', [PrioritasController::class, 'printPDF'])->name('printPDF');
         Route::get('/{mesin_id}/detail/pdf', [PrioritasController::class, 'detailPDF'])->name('detailPDF');
         Route::get('/grafik/saw', [PrioritasController::class, 'grafikSaw'])->name('grafik.saw');
+        
     });
 
     // 📊 Kriteria Routes

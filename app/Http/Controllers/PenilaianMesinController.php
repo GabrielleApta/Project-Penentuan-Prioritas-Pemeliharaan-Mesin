@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Mesin;
 use App\Models\PenilaianMesin;
 use App\Models\KerusakanTahunan;
+use App\Services\NormalisasiService; // ✅ IMPORT SERVICE
 use App\Exports\NormalisasiExport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -23,7 +24,7 @@ class PenilaianMesinController extends Controller
     {
         $tahunTerakhir = 2024;
 
-        // ✅ RAW QUERY dengan INNER JOIN (hanya ambil yang ada mesinnya)
+        // ✅ RAW QUERY dengan INNER JOIN dan CUSTOM SORTING
         $penilaian = \DB::select("
             SELECT
                 pm.id,
@@ -37,7 +38,20 @@ class PenilaianMesinController extends Controller
             FROM penilaian_mesin pm
             INNER JOIN mesin m ON pm.mesin_id = m.id
             WHERE pm.tahun_penilaian = ?
-            ORDER BY pm.id
+            ORDER BY
+                CASE
+                    WHEN m.nama_mesin LIKE 'Samjin%' THEN 1
+                    WHEN m.nama_mesin LIKE 'Twisting%' THEN 2
+                    WHEN m.nama_mesin LIKE 'Winder%' THEN 3
+                    WHEN m.nama_mesin LIKE 'Quick Traverse%' THEN 4
+                    WHEN m.nama_mesin LIKE 'Gulungan%' THEN 5
+                    WHEN m.nama_mesin LIKE 'Winding%' THEN 6
+                    WHEN m.nama_mesin LIKE 'Kamitsu%' THEN 7
+                    WHEN m.nama_mesin LIKE 'Vacum%' THEN 8
+                    ELSE 9
+                END,
+                CAST(REGEXP_REPLACE(m.nama_mesin, '[^0-9]', '') AS UNSIGNED),
+                m.nama_mesin
         ", [$tahunTerakhir]);
 
         // ✅ CEK APAKAH ADA DATA YANG MESINNYA HILANG
@@ -147,12 +161,12 @@ class PenilaianMesinController extends Controller
         return redirect()->back()->with('success', 'Penilaian berhasil digenerate!');
     }
 
-    // ✅ FIXED: Normalisasi juga gunakan raw query untuk konsistensi
+    // ✅ CLEAN: Gunakan Service untuk normalisasi
     public function normalisasi()
     {
         $tahunTerakhir = 2024;
 
-        // ✅ RAW QUERY untuk data normalisasi
+        // ✅ RAW QUERY untuk data normalisasi dengan CUSTOM SORTING
         $data = \DB::select("
             SELECT
                 pm.id,
@@ -166,47 +180,28 @@ class PenilaianMesinController extends Controller
             FROM penilaian_mesin pm
             INNER JOIN mesin m ON pm.mesin_id = m.id
             WHERE pm.tahun_penilaian = ?
-            ORDER BY pm.id
+            ORDER BY
+                CASE
+                    WHEN m.nama_mesin LIKE 'Samjin%' THEN 1
+                    WHEN m.nama_mesin LIKE 'Twisting%' THEN 2
+                    WHEN m.nama_mesin LIKE 'Winder%' THEN 3
+                    WHEN m.nama_mesin LIKE 'Quick Traverse%' THEN 4
+                    WHEN m.nama_mesin LIKE 'Gulungan%' THEN 5
+                    WHEN m.nama_mesin LIKE 'Winding%' THEN 6
+                    WHEN m.nama_mesin LIKE 'Kamitsu%' THEN 7
+                    WHEN m.nama_mesin LIKE 'Vacum%' THEN 8
+                    ELSE 9
+                END,
+                CAST(REGEXP_REPLACE(m.nama_mesin, '[^0-9]', '') AS UNSIGNED),
+                m.nama_mesin
         ", [$tahunTerakhir]);
 
         if (empty($data)) {
             return redirect()->back()->with('error', 'Data penilaian tidak ditemukan untuk tahun ' . $tahunTerakhir);
         }
 
-        // Convert to collection for easier manipulation
-        $data = collect($data);
-
-        // Ambil nilai minimum (karena semua kriteria adalah cost → nilai kecil lebih baik)
-        $minPenyusutan = $data->min('akumulasi_penyusutan') ?: 0.0001;
-        $minUsia       = $data->min('usia_mesin') ?: 0.0001;
-        $minFrekuensi  = $data->min('frekuensi_kerusakan') ?: 0.0001;
-        $minDowntime   = $data->min('waktu_downtime') ?: 0.0001;
-
-        $normalisasi = [];
-
-        foreach ($data as $item) {
-            // Pastikan tidak membagi dengan 0
-            $normPenyusutan = $item->akumulasi_penyusutan > 0 ? $minPenyusutan / $item->akumulasi_penyusutan : 0;
-            $normUsia       = $item->usia_mesin > 0 ? $minUsia / $item->usia_mesin : 0;
-            $normFrekuensi  = $item->frekuensi_kerusakan > 0 ? $minFrekuensi / $item->frekuensi_kerusakan : 0;
-            $normDowntime   = $item->waktu_downtime > 0 ? $minDowntime / $item->waktu_downtime : 0;
-
-            // Hitung skor akhir SAW
-            $skor =
-                ($normPenyusutan * 0.30) +
-                ($normUsia * 0.30) +
-                ($normFrekuensi * 0.20) +
-                ($normDowntime * 0.20);
-
-            $normalisasi[] = [
-                'mesin'           => $item->nama_mesin,
-                'norm_penyusutan' => number_format($normPenyusutan, 10, '.', ''),
-                'norm_usia'       => number_format($normUsia, 10, '.', ''),
-                'norm_frekuensi'  => number_format($normFrekuensi, 10, '.', ''),
-                'norm_downtime'   => number_format($normDowntime, 10, '.', ''),
-                'skor_akhir'      => number_format($skor, 10, '.', ''),
-            ];
-        }
+        // ✅ GUNAKAN SERVICE UNTUK NORMALISASI
+        $normalisasi = NormalisasiService::hitungNormalisasiForView($data);
 
         return view('pages.penilaian.normalisasi', compact('normalisasi'));
     }
