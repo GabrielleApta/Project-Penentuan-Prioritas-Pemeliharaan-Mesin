@@ -30,7 +30,7 @@ class PrioritasController extends Controller
         // Hanya tampilkan data yang mesinnya masih ada
         $hasil_saw = Prioritas::with('mesin')
             ->whereHas('mesin') // Filter hanya yang punya relasi mesin
-            ->orderBy('rangking')
+            ->orderBy('skor_akhir')
             ->get();
 
         return view('pages.prioritas.index', compact('hasil_saw'));

@@ -22,46 +22,45 @@ class DepresiasiController extends Controller
     }
 
     public function index(Request $request)
-{
-    if (session('depresiasi_disimpan')) {
+    {
+        // Ambil semua data mesin
         $mesins = Mesin::all();
-        $depresiasi = collect();
-    } else {
-        $mesins = Mesin::all();
-    $depresiasi = Depresiasi::whereDoesntHave('riwayat')->get();
-    $tahunSekarang = now()->year;
 
-    foreach ($mesins as $mesin) {
-        // Hitung depresiasi tahunan
-        $harga = (float) $mesin->harga_beli;
-        $sisa = (float) $mesin->nilai_sisa;
-        $umur = (int) $mesin->umur_ekonomis;
-        $depresiasi = ($umur > 0) ? ($harga - $sisa) / $umur : 0;
-        $mesin->depresiasi_tahunan = $depresiasi;
+        // Cek apakah ada data depresiasi yang sudah digenerate
+        $hasDepresiasiData = Depresiasi::exists();
 
-        // Ambil depresiasi tahun sekarang
-        $depresiasiTahunIni = $mesin->depresiasi()->where('tahun', $tahunSekarang)->first();
-        $mesin->total_akumulasi = $depresiasiTahunIni->akumulasi_penyusutan ?? 0;
-        $mesin->nilai_buku_akhir = $depresiasiTahunIni->nilai_buku ?? 0;
+        if ($hasDepresiasiData) {
+            // Jika ada data depresiasi, hitung dan tampilkan
+            $tahunSekarang = now()->year;
+
+            foreach ($mesins as $mesin) {
+                // Hitung depresiasi tahunan
+                $harga = (float) $mesin->harga_beli;
+                $sisa = (float) $mesin->nilai_sisa;
+                $umur = (int) $mesin->umur_ekonomis;
+                $depresiasi = ($umur > 0) ? ($harga - $sisa) / $umur : 0;
+                $mesin->depresiasi_tahunan = $depresiasi;
+
+                // Ambil data depresiasi untuk tahun sekarang
+                $depresiasiTahunIni = $mesin->depresiasi()->where('tahun', $tahunSekarang)->first();
+                $mesin->total_akumulasi = $depresiasiTahunIni ? $depresiasiTahunIni->akumulasi_penyusutan : 0;
+                $mesin->nilai_buku_akhir = $depresiasiTahunIni ? $depresiasiTahunIni->nilai_buku : 0;
+            }
+        } else {
+            // Jika belum ada data depresiasi, set nilai default ke 0
+            foreach ($mesins as $mesin) {
+                $mesin->depresiasi_tahunan = 0;
+                $mesin->total_akumulasi = 0;
+                $mesin->nilai_buku_akhir = 0;
+            }
+        }
+
+        return view('pages.depresiasi.index', compact('mesins', 'hasDepresiasiData'));
     }
-}
-    return view('pages.depresiasi.index', compact('mesins', 'depresiasi'));
-}
 
     public function generate()
     {
-        $kode = 'SL-' . now()->format('YmdHis');
-        $userId = auth()->id() ?? 1;
-
-        foreach (Mesin::all() as $mesin) {
-            $this->hitungDanSimpanDepresiasi($mesin, $kode, $userId);
-        }
-        session()->forget('depresiasi_disimpan');
-        return redirect()->route('depresiasi.index')->with('success', 'Data depresiasi berhasil dihitung.');
-    }
-
-    public function reset()
-    {
+        // Hapus data depresiasi lama jika ada
         Depresiasi::truncate();
 
         $kode = 'SL-' . now()->format('YmdHis');
@@ -70,84 +69,111 @@ class DepresiasiController extends Controller
         foreach (Mesin::all() as $mesin) {
             $this->hitungDanSimpanDepresiasi($mesin, $kode, $userId);
         }
+
+        // Hapus session jika ada
         session()->forget('depresiasi_disimpan');
+
+        return redirect()->route('depresiasi.index')->with('success', 'Data depresiasi berhasil dihitung.');
+    }
+
+    public function reset()
+    {
+        // Hapus semua data depresiasi
+        Depresiasi::truncate();
+
+        $kode = 'SL-' . now()->format('YmdHis');
+        $userId = auth()->id() ?? 1;
+
+        foreach (Mesin::all() as $mesin) {
+            $this->hitungDanSimpanDepresiasi($mesin, $kode, $userId);
+        }
+
+        // Hapus session jika ada
+        session()->forget('depresiasi_disimpan');
+
         return redirect()->route('depresiasi.index')->with('success', 'Data depresiasi berhasil di-reset dan dihitung ulang.');
     }
 
     private function hitungDanSimpanDepresiasi($mesin, $kode, $userId)
-{
-    $kode = $this->generateKode('SL');
-    $harga = (float) $mesin->harga_beli;
-    $sisa = (float) $mesin->nilai_sisa;
-    $umur = (int) $mesin->umur_ekonomis;
+    {
+        $harga = (float) $mesin->harga_beli;
+        $sisa = (float) $mesin->nilai_sisa;
+        $umur = (int) $mesin->umur_ekonomis;
 
-    $depresiasi = $umur > 0 ? ($harga - $sisa) / $umur : 0;
-    $tahun_awal = $mesin->tahun_pembelian;
-    $tahun_akhir = max($tahun_awal + $umur - 1, now()->year);
+        $depresiasi = $umur > 0 ? ($harga - $sisa) / $umur : 0;
+        $tahun_awal = $mesin->tahun_pembelian;
+        $tahun_akhir = max($tahun_awal + $umur - 1, now()->year);
 
-    $akumulasi = 0;
+        $akumulasi = 0;
 
-    for ($i = 0; $i <= ($tahun_akhir - $tahun_awal); $i++) {
-        $tahun = $tahun_awal + $i;
+        for ($i = 0; $i <= ($tahun_akhir - $tahun_awal); $i++) {
+            $tahun = $tahun_awal + $i;
 
-        if ($i < $umur) {
-            $penyusutan = $depresiasi;
-            $akumulasi += $penyusutan;
-            $nilai_buku = max($harga - $akumulasi, $sisa);
-        } else {
-            $penyusutan = 0;
-            $akumulasi = $harga - $sisa;
-            $nilai_buku = $sisa;
-        }
+            if ($i < $umur) {
+                $penyusutan = $depresiasi;
+                $akumulasi += $penyusutan;
+                $nilai_buku = max($harga - $akumulasi, $sisa);
+            } else {
+                $penyusutan = 0;
+                $akumulasi = $harga - $sisa;
+                $nilai_buku = $sisa;
+            }
 
-        Depresiasi::updateOrCreate(
-            ['mesin_id' => $mesin->id, 'tahun' => $tahun],
-            [
+            Depresiasi::create([
+                'mesin_id' => $mesin->id,
+                'tahun' => $tahun,
                 'kode_perhitungan' => $kode,
                 'dibuat_oleh' => $userId,
                 'tanggal_generate' => now(),
                 'penyusutan' => $penyusutan,
                 'akumulasi_penyusutan' => $akumulasi,
                 'nilai_buku' => $nilai_buku,
-            ]
-        );
+            ]);
+        }
     }
 
-    // ✅ Simpan ke RiwayatStraightLine (1 baris per mesin)
-    RiwayatStraightLine::create([
-        'mesin_id'                => $mesin->id,
-        'kode_perhitungan'       => $kode,
-        'nama_mesin'             => $mesin->nama_mesin,
-        'tahun_pembelian'        => $mesin->tahun_pembelian,
-        'harga_beli'             => $mesin->harga_beli,
-        'nilai_sisa'             => $mesin->nilai_sisa,
-        'umur_ekonomis'          => $mesin->umur_ekonomis,
-        'usia_mesin'             => now()->year - $mesin->tahun_pembelian,
-        'penyusutan_per_tahun'   => $depresiasi,
-        'akumulasi_penyusutan'   => $akumulasi,
-        'nilai_buku'             => $nilai_buku,
-    ]);
-}
+    public function simpanKeRiwayat()
+    {
+        // Cek apakah sudah ada data depresiasi
+        if (!Depresiasi::exists()) {
+            return redirect()->route('depresiasi.index')->with('error', 'Tidak ada data depresiasi untuk disimpan. Silakan generate data terlebih dahulu.');
+        }
 
-public function simpanKeRiwayat()
-{
-    $kode = 'SL-' . now()->format('YmdHis');
-    $userId = auth()->id() ?? 1;
+        $kode = 'SL-' . now()->format('YmdHis');
 
-    foreach (Mesin::all() as $mesin) {
-        $this->hitungDanSimpanDepresiasi($mesin, $kode, $userId);
+        foreach (Mesin::all() as $mesin) {
+            // Ambil data depresiasi terakhir untuk mesin ini
+            $depresiasiTerakhir = $mesin->depresiasi()->orderBy('tahun', 'desc')->first();
+
+            if ($depresiasiTerakhir) {
+                $harga = (float) $mesin->harga_beli;
+                $sisa = (float) $mesin->nilai_sisa;
+                $umur = (int) $mesin->umur_ekonomis;
+                $depresiasi_tahunan = $umur > 0 ? ($harga - $sisa) / $umur : 0;
+
+                RiwayatStraightLine::create([
+                    'mesin_id'                => $mesin->id,
+                    'kode_perhitungan'       => $kode,
+                    'nama_mesin'             => $mesin->nama_mesin,
+                    'tahun_pembelian'        => $mesin->tahun_pembelian,
+                    'harga_beli'             => $mesin->harga_beli,
+                    'nilai_sisa'             => $mesin->nilai_sisa,
+                    'umur_ekonomis'          => $mesin->umur_ekonomis,
+                    'usia_mesin'             => now()->year - $mesin->tahun_pembelian,
+                    'penyusutan_per_tahun'   => $depresiasi_tahunan,
+                    'akumulasi_penyusutan'   => $depresiasiTerakhir->akumulasi_penyusutan,
+                    'nilai_buku'             => $depresiasiTerakhir->nilai_buku,
+                ]);
+            }
+        }
+
+        return redirect()->route('depresiasi.index')->with('success', 'Data berhasil disimpan ke riwayat.');
     }
 
-    session()->put('depresiasi_disimpan', true);
-
-    return redirect()->route('depresiasi.index')->with('success', 'Data berhasil disimpan ke riwayat.');
-}
-
-private function generateKode($prefix = 'SL')
-{
-    return $prefix . '-' . now()->format('YmdHis') . '-' . rand(100, 999);
-}
-
+    private function generateKode($prefix = 'SL')
+    {
+        return $prefix . '-' . now()->format('YmdHis') . '-' . rand(100, 999);
+    }
 
     public function show($id)
     {
@@ -229,5 +255,4 @@ private function generateKode($prefix = 'SL')
                     ->setPaper('a4', 'landscape');
         return $pdf->stream('Data_Penyusutan_Mesin_' . date('d-m-Y') . '.pdf');
     }
-
 }

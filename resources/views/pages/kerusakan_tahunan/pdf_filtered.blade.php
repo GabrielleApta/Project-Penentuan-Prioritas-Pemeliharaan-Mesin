@@ -117,7 +117,7 @@
 
     {{-- JUDUL --}}
     <div class="judul-laporan">
-        LAPORAN KERUSAKAN MESIN
+        LAPORAN DATA KERUSAKAN MESIN
         @if (request('tahun'))
             TAHUN {{ request('tahun') }}
         @endif

@@ -7,21 +7,10 @@
     <h1 class="mt-4">Riwayat Perhitungan Penyusutan Mesin</h1>
     <ol class="breadcrumb mb-4">
         <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('depresiasi.index') }}">Perhitungan Penyusutan</a></li>
         <li class="breadcrumb-item active">Riwayat Perhitungan Straight Line</li>
     </ol>
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="alert alert-info d-flex align-items-start">
-                <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
-                <div>
-                    <strong>Informasi:</strong><br>
-                    Riwayat ini berisi hasil perhitungan penyusutan aset mesin menggunakan metode <strong>Straight Line</strong>.<br>
-                    Anda dapat melihat detail tiap perhitungan atau menghapus riwayat yang tidak dibutuhkan.
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="card shadow mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">

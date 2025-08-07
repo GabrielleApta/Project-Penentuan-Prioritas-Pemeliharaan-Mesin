@@ -112,7 +112,7 @@
      <hr class="double-line">
 
     <div class="judul-laporan">
-        LAPORAN DATA PENYUSUTAN MESIN
+        LAPORAN DATA PENYUSUTAN MESIN PRODUKSI BENANG<br> PT. ARTERIA DAYA MULIA
     </div>
 
     {{-- TABEL --}}

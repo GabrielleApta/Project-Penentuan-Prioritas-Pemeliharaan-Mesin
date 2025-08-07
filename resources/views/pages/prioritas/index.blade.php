@@ -10,23 +10,7 @@
         <li class="breadcrumb-item active">Hasil Perhitungan SAW</li>
     </ol>
 
-    <div class="card mb-4">
-        <div class="card-body">
-           <div class="alert alert-info d-flex align-items-start">
-                <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
-                <div>
-                    <strong>Informasi:</strong><br>
-                    Perhitungan prioritas pemeliharaan menggunakan dua metode yaitu <em>Straight Line</em> (untuk depresiasi aset) dan <strong>SAW</strong> (untuk penilaian multi-kriteria).<br>
-                    Data di bawah merupakan hasil akhir ranking berdasarkan metode <strong>SAW</strong>.<br>
-                    <ul class="mb-0 mt-1">
-                        <li>Pastikan data mesin seperti <strong>harga beli</strong>, <strong>nilai sisa</strong>, <strong>umur ekonomis</strong>, dan <strong>tahun pembelian</strong> sudah diisi dengan benar.</li>
-                        <li>Gunakan tombol <strong>Hitung Ulang</strong> jika ada perubahan data mesin.</li>
-                        <li>Gunakan tombol <strong>Simpan ke Riwayat</strong> untuk menyimpan hasil saat ini sebagai dokumentasi tetap.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <div class="card shadow mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -81,22 +65,22 @@
                 </div>
             @else
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped text-center align-middle" id="dataTable">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>Rangking</th>
-                                <th>Nama Mesin</th>
-                                <th>Skor Akhir</th>
-                                <th>Aksi</th>
+                    <table id="dataTable" class="table table-striped table-bordered text-center align-middle" style="width:100%">
+                    <thead class="thead-dark text-nowrap">
+                            <tr class="text-center">
+                                <th class="text-center">Rangking</th>
+                                <th class="text-center">Nama Mesin</th>
+                                <th class="text-center">Skor Akhir</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($hasil_saw as $hasil)
                                 <tr>
                                     <td>
-                                        <span class="badge bg-primary fs-6">{{ $hasil->rangking }}</span>
-                                    </td>
-                                    <td class="text-start">
+    {{ $loop->iteration }}
+</td>
+                                    <td class="text-center">
                                         @if($hasil->mesin)
                                             {{ $hasil->mesin->nama_mesin }}
                                         @else
@@ -139,7 +123,7 @@
     <script>
         $(document).ready(function () {
             $('#dataTable').DataTable({
-                scrollX: true,
+                scrollX: false,
                 responsive: true,
                 language: {
                     search: "Cari:",

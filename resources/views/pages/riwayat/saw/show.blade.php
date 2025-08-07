@@ -30,7 +30,7 @@
                         <th>Usia Mesin</th>
                         <th>Frekuensi Kerusakan</th>
                         <th>Waktu Downtime</th>
-                        <th>Normalisasi</th>
+
                         <th>Skor Akhir</th>
                         <th>Ranking</th>
                     </tr>
@@ -44,14 +44,7 @@
                             <td>{{ $item->usia_mesin }}</td>
                             <td>{{ $item->frekuensi_kerusakan }}</td>
                             <td>{{ $item->waktu_downtime }}</td>
-                            <td>
-                                <ul class="text-start mb-0">
-                                    <li>AP: {{ $item->normalisasi_akumulasi }}</li>
-                                    <li>UM: {{ $item->normalisasi_usia }}</li>
-                                    <li>FK: {{ $item->normalisasi_frekuensi }}</li>
-                                    <li>WD: {{ $item->normalisasi_downtime }}</li>
-                                </ul>
-                            </td>
+                           
                             <td>{{ number_format($item->skor_akhir, 4) }}</td>
                             <td><strong>{{ $item->ranking }}</strong></td>
                         </tr>

@@ -116,7 +116,8 @@
         <hr class="double-line">
 
     <div class="judul-laporan">
-        LAPORAN DATA MESIN
+        LAPORAN DATA MESIN PRODUKSI BENANG DI PT. ARTERIA DAYA MULIA<br>
+        TAHUN 2025
     </div>
 
     {{-- TABEL --}}

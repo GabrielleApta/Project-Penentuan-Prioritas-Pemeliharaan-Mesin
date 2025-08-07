@@ -23,7 +23,7 @@ use App\Http\Controllers\{
 // 🔒 Redirect root ke login
 Route::get('/', fn() => redirect()->route('login'));
 
-// 🔐 Autentikasi
+// 🔐 Autentikasi Routes
 Route::controller(LoginController::class)->group(function () {
     Route::get('/login', 'showLoginForm')->name('login');
     Route::post('/login', 'login');
@@ -37,11 +37,12 @@ Route::controller(RegisteredUserController::class)->group(function () {
     Route::post('/register-admin', 'storeAdmin')->name('register.admin.store');
 });
 
-// 🔐 Protected routes
+// 🔐 Protected Routes
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // 🏠 Dashboard umum
+    // 🏠 Dashboard Routes
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/top-depresiasi', [DashboardController::class, 'ajaxTopDepresiasi'])->name('dashboard.top-depresiasi');
 
     // Dashboard khusus untuk regu mekanik
     Route::middleware('role:regu_mekanik')
@@ -53,7 +54,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->get('/koordinator/dashboard', [DashboardController::class, 'userDashboard'])
         ->name('user.dashboard');
 
-    // 🔧 Mesin
+    // 🔧 Mesin Routes
     Route::resource('mesin', MesinController::class)->except(['show']);
     Route::prefix('mesin')->name('mesin.')->group(function () {
         Route::get('/export-excel', [MesinController::class, 'exportExcel'])->name('exportExcel');
@@ -65,7 +66,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/tidak-aktif', [MesinController::class, 'TidakAktif'])->name('tidakaktif');
     });
 
-    // 📉 Depresiasi
+    // 📉 Depresiasi Routes
     Route::prefix('depresiasi')->name('depresiasi.')->group(function () {
         Route::get('/', [DepresiasiController::class, 'index'])->name('index');
         Route::post('/hitung', [DepresiasiController::class, 'hitung'])->name('hitung');
@@ -77,7 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{mesin_id}', [DepresiasiController::class, 'show'])->name('show');
     });
 
-    // 🔥 Prioritas SAW
+    // 🔥 Prioritas SAW Routes
     Route::prefix('prioritas')->name('prioritas.')->group(function () {
         Route::get('/', [PrioritasController::class, 'index'])->name('index');
         Route::post('/proses', [PrioritasController::class, 'proses'])->name('proses');
@@ -90,12 +91,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/grafik/saw', [PrioritasController::class, 'grafikSaw'])->name('grafik.saw');
     });
 
-    // 📊 Kriteria
+    // 📊 Kriteria Routes
     Route::resource('kriteria', KriteriaController::class)
         ->parameters(['kriteria' => 'kriteria'])
         ->except(['show']);
 
-    // 📝 Penilaian Mesin
+    // 📝 Penilaian Mesin Routes
     Route::prefix('penilaian')->name('penilaian.')->group(function () {
         Route::get('/', [PenilaianMesinController::class, 'index'])->name('index');
         Route::get('/create', [PenilaianMesinController::class, 'create'])->name('create');
@@ -107,30 +108,52 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/export-excel', [PenilaianMesinController::class, 'exportExcel'])->name('exportExcel');
     });
 
-    // 📅 Kerusakan Tahunan
+    // 📅 Kerusakan Tahunan Routes
     Route::resource('kerusakan-tahunan', KerusakanTahunanController::class)->except(['show']);
-    Route::get('/kerusakan-tahunan/rata-rata', [KerusakanTahunanController::class, 'rataRataSkor'])->name('kerusakan-tahunan.rata-rata');
-    Route::get('/kerusakan/import', [KerusakanTahunanController::class, 'showImportForm'])->name('kerusakan.import.form');
-    Route::post('/kerusakan/import', [KerusakanTahunanController::class, 'import'])->name('kerusakan.import');
-    Route::get('kerusakan-tahunan/export-excel', [KerusakanTahunanController::class, 'exportExcel'])->name('kerusakan-tahunan.exportExcel');
-    Route::get('kerusakan-tahunan/export-pdf', [KerusakanTahunanController::class, 'exportPDF'])->name('kerusakan-tahunan.pdf');
-    Route::post('/kerusakan-tahunan/export-pdf-filter', [KerusakanTahunanController::class, 'exportPdfFiltered'])->name('kerusakan-tahunan.exportPdfFiltered');
-
-    // 📅 Jadwal Pemeliharaan
-    Route::prefix('jadwal')->group(function () {
-        Route::get('/', [JadwalPemeliharaanController::class, 'index'])->name('jadwal.index');
-        Route::get('/create', [JadwalPemeliharaanController::class, 'create'])->name('jadwal.create');
-        Route::post('/', [JadwalPemeliharaanController::class, 'store'])->name('jadwal.store');
-        Route::get('/generate/saw', [JadwalPemeliharaanController::class, 'generateDariSAW'])->name('jadwal.generate.saw');
-        Route::patch('/jadwal/{id}/status', [JadwalPemeliharaanController::class, 'updateStatus'])->name('jadwal.updateStatus');
-        Route::get('/jadwal/export-pdf', [JadwalPemeliharaanController::class, 'cetakJadwalPDF'])->name('jadwal.printPDF');
+    Route::prefix('kerusakan-tahunan')->name('kerusakan-tahunan.')->group(function () {
+        Route::get('/rata-rata', [KerusakanTahunanController::class, 'rataRataSkor'])->name('rata-rata');
+        Route::get('/export-excel', [KerusakanTahunanController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('/export-pdf', [KerusakanTahunanController::class, 'exportPDF'])->name('pdf');
+        Route::post('/export-pdf-filter', [KerusakanTahunanController::class, 'exportPdfFiltered'])->name('exportPdfFiltered');
     });
 
-    Route::resource('history-pemeliharaan', HistoryPemeliharaanController::class);
-    Route::post('/history-pemeliharaan/export-pdf-filtered', [HistoryPemeliharaanController::class, 'exportPdfFiltered'])
-    ->name('history-pemeliharaan.exportPdfFiltered');
+    // Import Kerusakan Tahunan
+    Route::prefix('kerusakan')->name('kerusakan.')->group(function () {
+        Route::get('/import', [KerusakanTahunanController::class, 'showImportForm'])->name('import.form');
+        Route::post('/import', [KerusakanTahunanController::class, 'import'])->name('import');
+    });
 
+    // 📅 Jadwal Pemeliharaan Routes
+    Route::prefix('jadwal')->name('jadwal.')->group(function () {
+        Route::get('/', [JadwalPemeliharaanController::class, 'index'])->name('index');
+        Route::get('/create', [JadwalPemeliharaanController::class, 'create'])->name('create');
+        Route::post('/', [JadwalPemeliharaanController::class, 'store'])->name('store');
+        Route::get('/generate/saw', [JadwalPemeliharaanController::class, 'generateDariSAW'])->name('generate.saw');
+        Route::patch('/{id}/status', [JadwalPemeliharaanController::class, 'updateStatus'])->name('updateStatus');
+        Route::get('/export-pdf', [JadwalPemeliharaanController::class, 'cetakJadwalPDF'])->name('printPDF');
+        Route::get('/clean-orphan', [JadwalPemeliharaanController::class, 'cleanOrphanData'])->name('clean.orphan');
+    });
 
+    // 📋 History Pemeliharaan Routes
+    Route::prefix('history-pemeliharaan')->name('history-pemeliharaan.')->group(function () {
+        Route::get('/', [HistoryPemeliharaanController::class, 'index'])->name('index');
+        Route::get('/create', [HistoryPemeliharaanController::class, 'create'])->name('create');
+        Route::post('/', [HistoryPemeliharaanController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [HistoryPemeliharaanController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [HistoryPemeliharaanController::class, 'update'])->name('update');
+        Route::delete('/{id}', [HistoryPemeliharaanController::class, 'destroy'])->name('destroy');
+        Route::post('/import', [HistoryPemeliharaanController::class, 'importExcel'])->name('import');
+        
+
+        // Export & Import
+        Route::post('/export-pdf-filtered', [HistoryPemeliharaanController::class, 'exportPdfFiltered'])->name('exportPdfFiltered');
+        Route::post('/import', [HistoryPemeliharaanController::class, 'importExcel'])->name('import');
+
+        // Utilities
+        Route::get('/clean-orphan', [HistoryPemeliharaanController::class, 'cleanOrphanData'])->name('clean.orphan');
+    });
+
+    // 📊 Riwayat Straight Line Routes
     Route::prefix('riwayat/straight-line')->name('riwayat.straight-line.')->group(function () {
         Route::get('/', [RiwayatStraightLineController::class, 'index'])->name('index');
         Route::post('/simpan', [RiwayatStraightLineController::class, 'simpan'])->name('simpan');
@@ -138,27 +161,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/destroy/{kode}', [RiwayatStraightLineController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('riwayat-saw')->group(function () {
-        Route::get('/', [RiwayatSawController::class, 'index'])->name('riwayat-saw.index');
-        Route::post('/simpan', [RiwayatSawController::class, 'store'])->name('riwayat-saw.store');
-        Route::get('/detail/{kode}', [RiwayatSawController::class, 'show'])->name('riwayat-saw.show');
-        Route::delete('/{kode}', [RiwayatSawController::class, 'destroy'])->name('riwayat-saw.destroy');
+    // 📊 Riwayat SAW Routes
+    Route::prefix('riwayat-saw')->name('riwayat-saw.')->group(function () {
+        Route::get('/', [RiwayatSawController::class, 'index'])->name('index');
+        Route::post('/simpan', [RiwayatSawController::class, 'store'])->name('store');
+        Route::get('/detail/{kode}', [RiwayatSawController::class, 'show'])->name('show');
+        Route::delete('/{kode}', [RiwayatSawController::class, 'destroy'])->name('destroy');
     });
 
-    // 📑 Laporan
+    // 📑 Laporan Routes
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/', [LaporanController::class, 'index'])->name('index');
         Route::get('/generate', [LaporanController::class, 'generate'])->name('generate');
     });
 
-    // 👤 Profil
+    // 👤 Profil Routes
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
     });
 
-    // 👥 Manajemen User (hanya untuk regu mekanik)
+    // 👥 Manajemen User Routes (hanya untuk regu mekanik)
     Route::middleware('role:regu_mekanik')
         ->prefix('users')
         ->name('users.')
@@ -170,8 +194,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::patch('/{user}', [UserController::class, 'update'])->name('update');
             Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
         });
-
-    Route::get('/dashboard/top-depresiasi', [DashboardController::class, 'ajaxTopDepresiasi'])->name('dashboard.top-depresiasi');
 });
 
 // 🔂 Auth tambahan

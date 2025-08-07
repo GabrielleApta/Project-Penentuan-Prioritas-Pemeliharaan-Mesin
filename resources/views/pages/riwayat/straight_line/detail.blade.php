@@ -38,10 +38,10 @@
                 <div class="table-responsive">
                     <table class="table table-bordered" id="dataTable">
                         <thead class="thead-dark text-center">
-                            <tr>
-                                <th class="text-center">Nama Mesin</th>
+                            <tr class="text-nowrap">
+                                <th class="text-nowrap">Nama Mesin</th>
                                 <th>Tahun</th>
-                                <th>Harga Beli</th>
+                                <th class="text-nowrap">Harga Beli</th>
                                 <th>Nilai Sisa</th>
                                 <th>Umur Ekonomis</th>
                                 <th>Usia Mesin</th>

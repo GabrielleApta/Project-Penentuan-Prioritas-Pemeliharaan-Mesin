@@ -25,36 +25,67 @@
     <div class="card mb-4 shadow">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div><i class="fas fa-table me-1"></i> Tabel Perhitungan Penyusutan Mesin</div>
-        <div>
-            @if(auth()->user()->role === 'regu_mekanik')
-                <a href="{{ route('depresiasi.reset') }}" class="btn btn-primary btn-sm"
-                    onclick="return confirm('Yakin ingin mereset semua data depresiasi?')">
-                    <i class="fas fa-sync-alt"></i> Hitung Ulang
-                </a>
+            <div>
+                @if(auth()->user()->role === 'regu_mekanik')
+                    @if(!isset($hasDepresiasiData) || !$hasDepresiasiData)
+                        {{-- Tombol Generate jika belum ada data --}}
+                        <a href="{{ route('depresiasi.generate') }}" class="btn btn-primary btn-sm"
+                            onclick="return confirm('Yakin ingin menghitung data depresiasi?')">
+                            <i class="fas fa-calculator"></i> Generate Perhitungan
+                        </a>
+                    @else
+                        {{-- Tombol untuk data yang sudah ada --}}
+                        <a href="{{ route('depresiasi.reset') }}" class="btn btn-primary btn-sm"
+                            onclick="return confirm('Yakin ingin mereset semua data depresiasi?')">
+                            <i class="fas fa-sync-alt"></i> Hitung Ulang
+                        </a>
 
-                <form action="{{ route('riwayat.straight-line.simpan') }}" method="POST" class="d-inline">
-    @csrf
-    <button type="submit" class="btn btn-success btn-sm"
-        onclick="return confirm('Yakin ingin menyimpan ke riwayat?')">
-        <i class="fas fa-save"></i> Simpan ke Riwayat
-    </button>
-</form>
-                <a href="{{ route('riwayat.straight-line.index') }}" class="btn btn-outline-success btn-sm">
-                    <i class="fas fa-file-excel"></i> Riwayat Perhitungan
-                </a>
-            @endif
-            <a href="{{ route('depresiasi.exportPdf') }}" class="btn btn-outline-danger btn-sm" target="_blank">
-                <i class="fas fa-file-pdf"></i> Export PDF
-            </a>
+                        <form action="{{ route('riwayat.straight-line.simpan') }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-success btn-sm"
+                                onclick="return confirm('Yakin ingin menyimpan ke riwayat?')">
+                                <i class="fas fa-save"></i> Simpan ke Riwayat
+                            </button>
+                        </form>
+
+                        <a href="{{ route('riwayat.straight-line.index') }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-file-excel"></i> Riwayat Perhitungan
+                        </a>
+                    @endif
+                @endif
+
+                @if(isset($hasDepresiasiData) && $hasDepresiasiData)
+                    <a href="{{ route('depresiasi.exportPdf') }}" class="btn btn-outline-danger btn-sm" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </a>
+                @endif
+            </div>
         </div>
-    </div>
 
         <div class="card-body">
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
-        </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+                </div>
+            @endif
+
+            {{-- Jika belum ada data depresiasi, tampilkan pesan --}}
+            @if(!isset($hasDepresiasiData) || !$hasDepresiasiData)
+                <div class="alert alert-warning d-flex align-items-start">
+                    <i class="fas fa-exclamation-triangle text-warning me-3 mt-1 fa-lg"></i>
+                    <div>
+                        <strong>Belum ada data perhitungan penyusutan!</strong><br>
+                        Klik tombol <strong>"Generate Perhitungan"</strong> untuk menghitung data penyusutan mesin.
+                    </div>
+                </div>
             @endif
 
             <div class="table-responsive">
@@ -82,11 +113,33 @@
                                 <td class="text-center text-nowrap">Rp. {{ number_format($m->harga_beli, 0, ',', '.') }}</td>
                                 <td class="text-center text-nowrap">Rp. {{ number_format($m->nilai_sisa, 0, ',', '.') }}</td>
                                 <td class="text-center">{{ $m->umur_ekonomis }} tahun</td>
-                                <td class="text-center text-nowrap">Rp. {{ number_format($m->depresiasi_tahunan ?? 0, 0, ',', '.') }}</td>
-                                <td class="text-center text-nowrap">Rp. {{ number_format($m->total_akumulasi, 0, ',', '.') }}</td>
-                                <td class="text-center text-nowrap">Rp. {{ number_format($m->nilai_buku_akhir, 0, ',', '.') }}</td>
+                                <td class="text-center text-nowrap">
+                                    @if(isset($hasDepresiasiData) && $hasDepresiasiData)
+                                        Rp. {{ number_format($m->depresiasi_tahunan ?? 0, 0, ',', '.') }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-center text-nowrap">
+                                    @if(isset($hasDepresiasiData) && $hasDepresiasiData)
+                                        Rp. {{ number_format($m->total_akumulasi, 0, ',', '.') }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-center text-nowrap">
+                                    @if(isset($hasDepresiasiData) && $hasDepresiasiData)
+                                        Rp. {{ number_format($m->nilai_buku_akhir, 0, ',', '.') }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
-                                    <a href="{{ route('depresiasi.show', $m->id) }}" class="btn btn-info btn-sm">Detail</a>
+                                    @if(isset($hasDepresiasiData) && $hasDepresiasiData)
+                                        <a href="{{ route('depresiasi.show', $m->id) }}" class="btn btn-info btn-sm">Detail</a>
+                                    @else
+                                        <button class="btn btn-secondary btn-sm" disabled>Detail</button>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

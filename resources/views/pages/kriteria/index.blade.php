@@ -15,17 +15,7 @@
         <div class="alert alert-info d-flex align-items-start">
     <i class="fas fa-info-circle text-primary me-3 mt-1 fa-lg"></i>
     <div>
-        <strong>Informasi:</strong><br>
-        Kriteria berikut digunakan dalam proses perhitungan <strong>SAW (Simple Additive Weighting)</strong> untuk menentukan tingkat prioritas pemeliharaan mesin produksi.<br><br>
 
-        <strong>Jenis Kriteria:</strong><br>
-        Seluruh kriteria yang digunakan ditetapkan sebagai <strong>Cost</strong>, karena seluruh indikator yang dinilai mencerminkan beban atau kerugian yang perlu diminimalkan. Misalnya:
-        <ul class="mb-2 mt-1">
-            <li><strong>Usia Mesin:</strong> Semakin tua mesin, semakin besar potensi kerusakan, sehingga semakin rendah nilainya semakin baik.</li>
-            <li><strong>Frekuensi Kerusakan:</strong> Mesin yang sering rusak menunjukkan reliabilitas rendah.</li>
-            <li><strong>Downtime:</strong> Durasi waktu henti yang panjang menurunkan produktivitas.</li>
-            <li><strong>Akumulasi Penyusutan:</strong> Semakin tinggi nilai penyusutan, semakin rendah nilai ekonomis aset.</li>
-        </ul>
 
         <strong>Penetapan Bobot:</strong><br>
         Bobot pada setiap kriteria merepresentasikan tingkat kepentingan relatif terhadap tujuan akhir sistem, yaitu menjaga keberlangsungan operasional dengan efisiensi maksimal:
@@ -69,7 +59,7 @@
                             <th>No</th>
                             <th>Nama Kriteria</th>
                             <th>Bobot</th>
-                            <th>Jenis</th>
+
                             @if(auth()->user()->role === 'regu_mekanik')
                                 <th>Aksi</th>
                             @endif
@@ -81,7 +71,7 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $item->nama_kriteria }}</td>
                                 <td>{{ $item->bobot * 100 }}%</td>
-                                <td>{{ ucfirst($item->jenis_kriteria) }}</td>
+                                
                                 @if(auth()->user()->role === 'regu_mekanik')
                                 <td>
                                     <div class="d-flex justify-content-center gap-2">
